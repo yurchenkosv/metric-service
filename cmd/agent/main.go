@@ -90,17 +90,19 @@ func pushMemMetrics(m MemMetrics) {
 	server := "http://localhost:8080"
 	client := &http.Client{}
 	for metricName, metricValue := range m.gaugeMetrics {
-		_, err := client.Post(fmt.Sprintf("%s/update/gauge/%s/%v", server, metricName, fmt.Sprintf("%f", metricValue)),
+		resp, err := client.Post(fmt.Sprintf("%s/update/gauge/%s/%v", server, metricName, fmt.Sprintf("%f", metricValue)),
 			"text/plain", nil)
 		if err != nil {
 			log.Panic(err)
 		}
+		defer resp.Body.Close()
 	}
-	_, err := client.Post(fmt.Sprintf("%s/update/counter/%s/%v", server, "PollCount", fmt.Sprintf("%v", m.PollCount)),
+	resp, err := client.Post(fmt.Sprintf("%s/update/counter/%s/%v", server, "PollCount", fmt.Sprintf("%v", m.PollCount)),
 		"text/plain", nil)
 	if err != nil {
 		log.Panic(err)
 	}
+	defer resp.Body.Close()
 }
 
 func cleanup(mainLoop *time.Ticker, pushLoop *time.Ticker, mainLoopStop chan bool) {
