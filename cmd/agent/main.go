@@ -96,7 +96,7 @@ func pushMemMetrics(m MemMetrics) {
 			log.Panic(err)
 		}
 	}
-	_, err := client.Post(fmt.Sprintf("%s/update/counter/%s/%v", server, "PollCount", fmt.Sprintf("%f", m.PollCount)),
+	_, err := client.Post(fmt.Sprintf("%s/update/counter/%s/%v", server, "PollCount", fmt.Sprintf("%v", m.PollCount)),
 		"text/plain", nil)
 	if err != nil {
 		log.Panic(err)
