@@ -1,11 +1,13 @@
 package storage
 
+import "github.com/yurchenkosv/metric-service/internal/types"
+
 type Repository interface {
 	Save() bool
 }
 
-type Gauge float64
-type Counter int64
+type Gauge types.Gauge
+type Counter types.Counter
 
 type MapStorage struct {
 	GaugeMetric   map[string]Gauge
