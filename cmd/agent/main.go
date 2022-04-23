@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/yurchenkosv/metric-service/internal/types"
 	"log"
 	"math/rand"
 	"net/http"
@@ -13,75 +14,72 @@ import (
 	"time"
 )
 
-type gauge float64
-type counter int64
-
 type MemMetrics struct {
-	Alloc         gauge
-	BuckHashSys   gauge
-	Frees         gauge
-	GCCPUFraction gauge
-	GCSys         gauge
-	HeapAlloc     gauge
-	HeapIdle      gauge
-	HeapInuse     gauge
-	HeapObjects   gauge
-	HeapReleased  gauge
-	HeapSys       gauge
-	LastGC        gauge
-	Lookups       gauge
-	MCacheInuse   gauge
-	MCacheSys     gauge
-	MSpanInuse    gauge
-	MSpanSys      gauge
-	Mallocs       gauge
-	NextGC        gauge
-	NumForcedGC   gauge
-	NumGC         gauge
-	OtherSys      gauge
-	PauseTotalNs  gauge
-	StackInuse    gauge
-	StackSys      gauge
-	Sys           gauge
-	TotalAlloc    gauge
-	PollCount     counter
-	RandomValue   gauge
-	gaugeMetrics  map[string]gauge
+	Alloc         types.Gauge
+	BuckHashSys   types.Gauge
+	Frees         types.Gauge
+	GCCPUFraction types.Gauge
+	GCSys         types.Gauge
+	HeapAlloc     types.Gauge
+	HeapIdle      types.Gauge
+	HeapInuse     types.Gauge
+	HeapObjects   types.Gauge
+	HeapReleased  types.Gauge
+	HeapSys       types.Gauge
+	LastGC        types.Gauge
+	Lookups       types.Gauge
+	MCacheInuse   types.Gauge
+	MCacheSys     types.Gauge
+	MSpanInuse    types.Gauge
+	MSpanSys      types.Gauge
+	Mallocs       types.Gauge
+	NextGC        types.Gauge
+	NumForcedGC   types.Gauge
+	NumGC         types.Gauge
+	OtherSys      types.Gauge
+	PauseTotalNs  types.Gauge
+	StackInuse    types.Gauge
+	StackSys      types.Gauge
+	Sys           types.Gauge
+	TotalAlloc    types.Gauge
+	PollCount     types.Counter
+	RandomValue   types.Gauge
+	gaugeMetrics  map[string]types.Gauge
 }
 
 func collectMemMetrics(poolCount int) MemMetrics {
 	var rtm runtime.MemStats
 	var memoryMetrics MemMetrics
-	metrics := make(map[string]gauge)
-	metrics["Alloc"] = gauge(rtm.Alloc)
-	metrics["BuckHashSys"] = gauge(rtm.BuckHashSys)
-	metrics["Frees"] = gauge(rtm.Frees)
-	metrics["GCCPUFraction"] = gauge(rtm.GCCPUFraction)
-	metrics["GCSys"] = gauge(rtm.GCSys)
-	metrics["HeapAlloc"] = gauge(rtm.HeapAlloc)
-	metrics["HeapIdle"] = gauge(rtm.HeapIdle)
-	metrics["HeapInuse"] = gauge(rtm.HeapInuse)
-	metrics["HeapObjects"] = gauge(rtm.HeapObjects)
-	metrics["HeapReleased"] = gauge(rtm.HeapReleased)
-	metrics["HeapSys"] = gauge(rtm.HeapSys)
-	metrics["LastGC"] = gauge(rtm.LastGC)
-	metrics["Lookups"] = gauge(rtm.Lookups)
-	metrics["MCacheInuse"] = gauge(rtm.MCacheInuse)
-	metrics["MCacheSys"] = gauge(rtm.MCacheSys)
-	metrics["MSpanInuse"] = gauge(rtm.MSpanInuse)
-	metrics["MSpanSys"] = gauge(rtm.MSpanSys)
-	metrics["Mallocs"] = gauge(rtm.Mallocs)
-	metrics["NextGC"] = gauge(rtm.NextGC)
-	metrics["NumForcedGC"] = gauge(rtm.NumForcedGC)
-	metrics["NumGC"] = gauge(rtm.NumGC)
-	metrics["OtherSys"] = gauge(rtm.OtherSys)
-	metrics["PauseTotalNs"] = gauge(rtm.PauseTotalNs)
-	metrics["StackInuse"] = gauge(rtm.StackInuse)
-	metrics["StackSys"] = gauge(rtm.StackSys)
-	metrics["Sys"] = gauge(rtm.Sys)
-	metrics["TotalAlloc"] = gauge(rtm.TotalAlloc)
-	metrics["RandomValue"] = gauge(rand.Float64())
-	memoryMetrics.PollCount = counter(poolCount)
+	metrics := make(map[string]types.Gauge)
+	metrics["Alloc"] = types.Gauge(rtm.Alloc)
+	metrics["BuckHashSys"] = types.Gauge(rtm.BuckHashSys)
+	metrics["Frees"] = types.Gauge(rtm.Frees)
+	metrics["GCCPUFraction"] = types.Gauge(rtm.GCCPUFraction)
+	metrics["GCSys"] = types.Gauge(rtm.GCSys)
+	metrics["HeapAlloc"] = types.Gauge(rtm.HeapAlloc)
+	metrics["HeapIdle"] = types.Gauge(rtm.HeapIdle)
+	metrics["HeapInuse"] = types.Gauge(rtm.HeapInuse)
+	metrics["HeapObjects"] = types.Gauge(rtm.HeapObjects)
+	metrics["HeapReleased"] = types.Gauge(rtm.HeapReleased)
+	metrics["HeapSys"] = types.Gauge(rtm.HeapSys)
+	metrics["LastGC"] = types.Gauge(rtm.LastGC)
+	metrics["Lookups"] = types.Gauge(rtm.Lookups)
+	metrics["MCacheInuse"] = types.Gauge(rtm.MCacheInuse)
+	metrics["MCacheSys"] = types.Gauge(rtm.MCacheSys)
+	metrics["MSpanInuse"] = types.Gauge(rtm.MSpanInuse)
+	metrics["MSpanSys"] = types.Gauge(rtm.MSpanSys)
+	metrics["Mallocs"] = types.Gauge(rtm.Mallocs)
+	metrics["NextGC"] = types.Gauge(rtm.NextGC)
+	metrics["NumForcedGC"] = types.Gauge(rtm.NumForcedGC)
+	metrics["NumGC"] = types.Gauge(rtm.NumGC)
+	metrics["OtherSys"] = types.Gauge(rtm.OtherSys)
+	metrics["PauseTotalNs"] = types.Gauge(rtm.PauseTotalNs)
+	metrics["StackInuse"] = types.Gauge(rtm.StackInuse)
+	metrics["StackSys"] = types.Gauge(rtm.StackSys)
+	metrics["Sys"] = types.Gauge(rtm.Sys)
+	metrics["TotalAlloc"] = types.Gauge(rtm.TotalAlloc)
+	metrics["RandomValue"] = types.Gauge(rand.Float64())
+	memoryMetrics.PollCount = types.Counter(poolCount)
 	memoryMetrics.gaugeMetrics = metrics
 	return memoryMetrics
 }
@@ -129,7 +127,7 @@ func main() {
 			case <-mainLoopStop:
 				return
 			case <-mainLoop.C:
-				pollCount += 1
+				pollCount = 1
 				collectMemMetrics(pollCount)
 			case <-pushLoop.C:
 				memMetrics <- collectMemMetrics(pollCount)
