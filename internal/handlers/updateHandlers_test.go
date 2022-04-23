@@ -95,6 +95,7 @@ func TestHandleMetricPositive(t *testing.T) {
 
 			handlerFunc.ServeHTTP(responseRecorder, request)
 			result := responseRecorder.Result()
+			defer result.Body.Close()
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			for k, v := range tt.want.headers {

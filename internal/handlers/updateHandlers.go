@@ -19,14 +19,14 @@ func HandleMetric(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	reqUrl := r.URL.Path
-	urlMatch, _ := regexp.MatchString("update/(gauge|counter)/[a-zA-z]+/(\\d+|\\d+\\.)\\d*$", reqUrl)
+	reqURL := r.URL.Path
+	urlMatch, _ := regexp.MatchString("update/(gauge|counter)/[a-zA-z]+/(\\d+|\\d+\\.)\\d*$", reqURL)
 
 	if !urlMatch {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	metrics := strings.Split(reqUrl, "/")
+	metrics := strings.Split(reqURL, "/")
 	if metrics[len(metrics)-3] == "counter" {
 		metricName := metrics[len(metrics)-2]
 		metricValue, _ := strconv.ParseInt(metrics[len(metrics)-1], 10, 64)
