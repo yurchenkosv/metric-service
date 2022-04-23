@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"net/http"
 	"regexp"
@@ -13,6 +12,10 @@ var mapStorage = &storage.MapStorage{}
 
 func HandleMetric(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if r.Header.Get("Content-Type") != "text/plain" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -33,6 +36,5 @@ func HandleMetric(w http.ResponseWriter, r *http.Request) {
 		metricValue, _ := strconv.ParseFloat(metrics[len(metrics)-1], 64)
 		mapStorage.AddGauge(metricName, storage.Gauge(metricValue))
 	}
-	fmt.Println(mapStorage)
-
+	w.Header().Add("Content-Type", "text/plain")
 }

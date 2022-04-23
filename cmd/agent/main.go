@@ -129,7 +129,7 @@ func main() {
 			case <-mainLoopStop:
 				return
 			case <-mainLoop.C:
-				pollCount += 1
+				pollCount = 1
 				collectMemMetrics(pollCount)
 			case <-pushLoop.C:
 				memMetrics <- collectMemMetrics(pollCount)
