@@ -9,7 +9,14 @@ import (
 
 var mapStorage = &storage.MapStorage{}
 
-func HandleMetric(writer http.ResponseWriter, request *http.Request) {
+func checkMetricType(metricType string, w http.ResponseWriter) {
+	if metricType != "counter" && metricType != "gauge" {
+		w.WriteHeader(http.StatusNotImplemented)
+		return
+	}
+}
+
+func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 	//if request.Header.Get("Content-Type") != "text/plain" {
 	//	writer.WriteHeader(http.StatusBadRequest)
 	//	return
@@ -17,10 +24,9 @@ func HandleMetric(writer http.ResponseWriter, request *http.Request) {
 	metricType := chi.URLParam(request, "metricType")
 	metricName := chi.URLParam(request, "metricName")
 	metricValue := chi.URLParam(request, "metricValue")
-	if metricType != "counter" && metricType != "gauge" {
-		writer.WriteHeader(http.StatusNotImplemented)
-		return
-	}
+
+	checkMetricType(metricType, writer)
+
 	if metricType == "counter" {
 		val, err := strconv.ParseInt(metricValue, 10, 64)
 		if err != nil {
@@ -35,4 +41,22 @@ func HandleMetric(writer http.ResponseWriter, request *http.Request) {
 		}
 		mapStorage.AddGauge(metricName, storage.Gauge(val))
 	}
+}
+
+func HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
+	metricType := chi.URLParam(request, "metricType")
+	metricName := chi.URLParam(request, "metricName")
+	checkMetricType(metricType, writer)
+
+	val, err := mapStorage.GetMetricByKey(metricName)
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte("no metrics found"))
+	}
+	writer.Write([]byte(val))
+}
+
+func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
+	val := mapStorage.GetAllMetrics()
+	writer.Write([]byte(val))
 }

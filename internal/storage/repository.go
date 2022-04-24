@@ -1,6 +1,10 @@
 package storage
 
-import "github.com/yurchenkosv/metric-service/internal/types"
+import (
+	"errors"
+	"fmt"
+	"github.com/yurchenkosv/metric-service/internal/types"
+)
 
 type Repository interface {
 	Save() bool
@@ -26,4 +30,25 @@ func (m *MapStorage) AddGauge(name string, val Gauge) {
 		m.GaugeMetric = make(map[string]Gauge)
 	}
 	m.GaugeMetric[name] = val
+}
+
+func (m *MapStorage) GetMetricByKey(key string) (string, error) {
+	if val, ok := m.CounterMetric[key]; ok {
+		return fmt.Sprintf("%v", val), nil
+	}
+	if val, ok := m.GaugeMetric[key]; ok {
+		return fmt.Sprintf("%.2f", val), nil
+	}
+	return "", errors.New("no value found")
+}
+
+func (m *MapStorage) GetAllMetrics() string {
+	var metrics string
+	for k, v := range m.CounterMetric {
+		metrics += fmt.Sprintf("key = %s value = %v\n", k, v)
+	}
+	for k, v := range m.GaugeMetric {
+		metrics += fmt.Sprintf("key = %s value = %v\n", k, v)
+	}
+	return metrics
 }

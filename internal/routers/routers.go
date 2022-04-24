@@ -14,8 +14,14 @@ func NewRouter() chi.Router {
 	router.Use(middleware.Recoverer)
 
 	router.Route("/update/{metricType}", func(r chi.Router) {
-		r.Post("/{metricName}/{metricValue}", handlers.HandleMetric)
+		r.Post("/{metricName}/{metricValue}", handlers.HandleUpdateMetric)
 
+	})
+	router.Route("/", func(r chi.Router) {
+		r.Get("/", handlers.HandleGetAllMetrics)
+	})
+	router.Route("/value", func(r chi.Router) {
+		r.Get("/{metricType}/{metricName}", handlers.HandleGetMetric)
 	})
 	return router
 }
