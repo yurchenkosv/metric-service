@@ -11,10 +11,10 @@ import (
 var mapStorage = &storage.MapStorage{}
 
 func HandleMetric(writer http.ResponseWriter, request *http.Request) {
-	if request.Header.Get("Content-Type") != "text/plain" {
-		writer.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	//if request.Header.Get("Content-Type") != "text/plain" {
+	//	writer.WriteHeader(http.StatusBadRequest)
+	//	return
+	//}
 	metricType := chi.URLParam(request, "metricType")
 	metricName := chi.URLParam(request, "metricName")
 	metricValue := chi.URLParam(request, "metricValue")

@@ -104,6 +104,18 @@ func TestRouter(t *testing.T) {
 				headers:    map[string]string{},
 			},
 		},
+		//{
+		//	name:      "should return 400 when no Content-Type header supplied",
+		//	urlToCall: "/update/counter/NewCounterMetric/1",
+		//	method:    http.MethodPost,
+		//	headers:   map[string]string{},
+		//	want: want{
+		//		statusCode: 400,
+		//		headers: map[string]string{
+		//			"Content-Type": "text/plain",
+		//		},
+		//	},
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -113,12 +125,12 @@ func TestRouter(t *testing.T) {
 			defer ts.Close()
 
 			resp, _ := testRequest(t, ts, tt.method, tt.urlToCall, tt.headers)
+			defer resp.Body.Close()
 
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			//assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			//for k, v := range tt.want.headers {
-			//	assert.Equal(t, v, result.Header.Get(k))
+			//	assert.Equal(t, v, resp.Header.Get(k))
 			//}
 
 		})
