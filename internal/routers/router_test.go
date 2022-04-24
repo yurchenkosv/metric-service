@@ -1,13 +1,34 @@
-package handlers
+package routers
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestHandleMetricPositive(t *testing.T) {
+func testRequest(t *testing.T, ts *httptest.Server, method, path string, headers map[string]string) (*http.Response, string) {
+	req, err := http.NewRequest(method, ts.URL+path, nil)
+	require.NoError(t, err)
+
+	for headerKey, headerVal := range headers {
+		req.Header.Add(headerKey, headerVal)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	respBody, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	defer resp.Body.Close()
+
+	return resp, string(respBody)
+}
+
+func TestRouter(t *testing.T) {
 	type want struct {
 		statusCode int
 		headers    map[string]string
@@ -72,35 +93,33 @@ func TestHandleMetricPositive(t *testing.T) {
 			},
 		},
 		{
-			name:      "should return 400 when caling not POST method",
+			name:      "should return 405 when caling not POST method",
 			urlToCall: "/update/counter/NewCounterMetric/1",
 			method:    http.MethodGet,
 			headers: map[string]string{
 				"Content-Type": "text/plain",
 			},
 			want: want{
-				statusCode: 400,
+				statusCode: 405,
 				headers:    map[string]string{},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(tt.method, tt.urlToCall, nil)
-			for headerKey, headerVal := range tt.headers {
-				request.Header.Add(headerKey, headerVal)
-			}
-			responseRecorder := httptest.NewRecorder()
-			handlerFunc := http.HandlerFunc(HandleMetric)
 
-			handlerFunc.ServeHTTP(responseRecorder, request)
-			result := responseRecorder.Result()
-			defer result.Body.Close()
+			r := NewRouter()
+			ts := httptest.NewServer(r)
+			defer ts.Close()
 
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-			for k, v := range tt.want.headers {
-				assert.Equal(t, v, result.Header.Get(k))
-			}
+			resp, _ := testRequest(t, ts, tt.method, tt.urlToCall, tt.headers)
+
+			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
+
+			//assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			//for k, v := range tt.want.headers {
+			//	assert.Equal(t, v, result.Header.Get(k))
+			//}
 
 		})
 	}
