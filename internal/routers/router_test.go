@@ -69,18 +69,6 @@ func TestRouter(t *testing.T) {
 			},
 		},
 		{
-			name:      "should return 400 when calling wrong url within /update",
-			urlToCall: "/update/wrong/NewMetric/0.23",
-			method:    http.MethodPost,
-			headers: map[string]string{
-				"Content-Type": "text/plain",
-			},
-			want: want{
-				statusCode: 400,
-				headers:    map[string]string{},
-			},
-		},
-		{
 			name:      "should return 400 when metric value NaN",
 			urlToCall: "/update/counter/NewCounterMetric/stringHere",
 			method:    http.MethodPost,
@@ -101,6 +89,18 @@ func TestRouter(t *testing.T) {
 			},
 			want: want{
 				statusCode: 405,
+				headers:    map[string]string{},
+			},
+		},
+		{
+			name:      "should return 501 when unknown type supplied",
+			urlToCall: "/update/unknown/NewCounterMetric/1",
+			method:    http.MethodPost,
+			headers: map[string]string{
+				"Content-Type": "text/plain",
+			},
+			want: want{
+				statusCode: 501,
 				headers:    map[string]string{},
 			},
 		},

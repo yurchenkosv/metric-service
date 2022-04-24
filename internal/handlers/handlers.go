@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/yurchenkosv/metric-service/internal/storage"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -19,22 +18,20 @@ func HandleMetric(writer http.ResponseWriter, request *http.Request) {
 	metricName := chi.URLParam(request, "metricName")
 	metricValue := chi.URLParam(request, "metricValue")
 	if metricType != "counter" && metricType != "gauge" {
-		writer.WriteHeader(http.StatusBadRequest)
+		writer.WriteHeader(http.StatusNotImplemented)
 		return
 	}
 	if metricType == "counter" {
 		val, err := strconv.ParseInt(metricValue, 10, 64)
 		if err != nil {
-			writer.WriteHeader(400)
-			log.Panic(err)
+			writer.WriteHeader(http.StatusBadRequest)
 		}
 		mapStorage.AddCounter(metricName, storage.Counter(val))
 	}
 	if metricType == "gauge" {
 		val, err := strconv.ParseFloat(metricValue, 64)
 		if err != nil {
-			writer.WriteHeader(400)
-			log.Panic(err)
+			writer.WriteHeader(http.StatusBadRequest)
 		}
 		mapStorage.AddGauge(metricName, storage.Gauge(val))
 	}
