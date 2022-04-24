@@ -59,10 +59,10 @@ func PushMemMetrics(m types.MemMetrics) {
 		Build()
 
 	client := resty.New()
-	client.BaseURL = apiServer
 	client.SetRetryCount(3).
 		SetRetryWaitTime(2 * time.Second).
-		SetRetryMaxWaitTime(5 * time.Second)
+		SetRetryMaxWaitTime(5 * time.Second).
+		SetBaseURL(apiServer)
 
 	for metricName, metricValue := range m.GaugeMetrics {
 		_, err := client.R().
