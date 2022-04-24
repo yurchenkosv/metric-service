@@ -1,18 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"github.com/yurchenkosv/metric-service/internal/routers"
+	"github.com/yurchenkosv/metric-service/internal/types"
 	"log"
 	"net/http"
 )
 
 var (
-	server = "localhost"
-	port   = "8080"
+	server = types.URLServer{}
 )
 
 func main() {
 	router := routers.NewRouter()
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", server, port), router))
+	serveFor := server.
+		SetHost("localhost").
+		SetPort("8080").
+		Build()
+	log.Fatal(http.ListenAndServe(serveFor, router))
 }

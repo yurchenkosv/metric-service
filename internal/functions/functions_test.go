@@ -1,13 +1,14 @@
-package main
+package functions
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/yurchenkosv/metric-service/internal/types"
 	"testing"
 )
 
-func Test_collectMemMetrics(t *testing.T) {
+func TestCollectMemMetrics(t *testing.T) {
 	type want struct {
-		metrics       MemMetrics
+		metrics       types.MemMetrics
 		metricsLength int
 	}
 	tests := []struct {
@@ -20,16 +21,16 @@ func Test_collectMemMetrics(t *testing.T) {
 			poolCount: 1,
 			want: want{
 				metricsLength: 28,
-				metrics:       MemMetrics{PollCount: 1},
+				metrics:       types.MemMetrics{PollCount: 1},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := collectMemMetrics(tt.poolCount)
-			assert.IsType(t, MemMetrics{}, result)
-			assert.NotEmpty(t, result.gaugeMetrics)
-			assert.Equal(t, len(result.gaugeMetrics), tt.want.metricsLength)
+			result := CollectMemMetrics(tt.poolCount)
+			assert.IsType(t, types.MemMetrics{}, result)
+			assert.NotEmpty(t, result.GaugeMetrics)
+			assert.Equal(t, len(result.GaugeMetrics), tt.want.metricsLength)
 			assert.Equal(t, tt.want.metrics.PollCount, result.PollCount)
 		})
 	}
