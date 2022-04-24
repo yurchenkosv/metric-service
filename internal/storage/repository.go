@@ -37,7 +37,7 @@ func (m *MapStorage) GetMetricByKey(key string) (string, error) {
 		return fmt.Sprintf("%v", val), nil
 	}
 	if val, ok := m.GaugeMetric[key]; ok {
-		return fmt.Sprintf("%.2f", val), nil
+		return fmt.Sprintf("%.3f", val), nil
 	}
 	return "", errors.New("no value found")
 }
