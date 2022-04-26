@@ -49,7 +49,7 @@ func TestRouter(t *testing.T) {
 				"Content-Type": "text/plain",
 			},
 			want: want{
-				statusCode: 200,
+				statusCode: http.StatusOK,
 				headers: map[string]string{
 					"Content-Type": "text/plain",
 				},
@@ -63,7 +63,7 @@ func TestRouter(t *testing.T) {
 				"Content-Type": "text/plain",
 			},
 			want: want{
-				statusCode: 200,
+				statusCode: http.StatusOK,
 				headers: map[string]string{
 					"Content-Type": "text/plain",
 				},
@@ -77,7 +77,7 @@ func TestRouter(t *testing.T) {
 				"Content-Type": "text/plain",
 			},
 			want: want{
-				statusCode: 400,
+				statusCode: http.StatusBadRequest,
 				headers:    map[string]string{},
 			},
 		},
@@ -89,7 +89,7 @@ func TestRouter(t *testing.T) {
 				"Content-Type": "text/plain",
 			},
 			want: want{
-				statusCode: 405,
+				statusCode: http.StatusMethodNotAllowed,
 				headers:    map[string]string{},
 			},
 		},
@@ -101,7 +101,7 @@ func TestRouter(t *testing.T) {
 				"Content-Type": "text/plain",
 			},
 			want: want{
-				statusCode: 501,
+				statusCode: http.StatusNotImplemented,
 				headers:    map[string]string{},
 			},
 		},

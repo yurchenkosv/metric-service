@@ -11,6 +11,7 @@ func NewRouter() chi.Router {
 
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
+	router.Use(middleware.StripSlashes)
 	router.Use(middleware.Recoverer)
 
 	router.Route("/update/{metricType}", func(r chi.Router) {

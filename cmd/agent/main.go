@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
@@ -18,8 +17,6 @@ func main() {
 	memMetrics := make(chan types.MemMetrics)
 	osSignal := make(chan os.Signal)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 
 	go func() {
 		var pollCount int
@@ -42,10 +39,7 @@ func main() {
 		}
 	}()
 
-	go func() {
-		<-osSignal
-		functions.Cleanup(mainLoop, pushLoop, mainLoopStop)
-		os.Exit(0)
-	}()
-	wg.Wait()
+	<-osSignal
+	functions.Cleanup(mainLoop, pushLoop, mainLoopStop)
+	os.Exit(0)
 }
