@@ -15,7 +15,7 @@ func main() {
 	pushLoop := time.NewTicker(10 * time.Second)
 	mainLoopStop := make(chan bool)
 	memMetrics := make(chan types.MemMetrics)
-	osSignal := make(chan os.Signal)
+	osSignal := make(chan os.Signal, 3)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
 	go func() {
