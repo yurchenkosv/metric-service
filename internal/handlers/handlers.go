@@ -8,7 +8,7 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/storage"
 )
 
-var mapStorage = &storage.MapStorage{}
+var mapStorage = storage.NewMapStorage()
 
 func checkMetricType(metricType string, w http.ResponseWriter) {
 	if metricType != "counter" && metricType != "gauge" {
