@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 	"fmt"
+
 	"github.com/yurchenkosv/metric-service/internal/types"
 )
 

@@ -2,12 +2,13 @@ package functions
 
 import (
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	"github.com/yurchenkosv/metric-service/internal/types"
 	"log"
 	"math/rand"
 	"runtime"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
 var (

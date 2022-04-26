@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/yurchenkosv/metric-service/internal/storage"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/yurchenkosv/metric-service/internal/storage"
 )
 
 var mapStorage = &storage.MapStorage{}

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/yurchenkosv/metric-service/internal/routers"
-	"github.com/yurchenkosv/metric-service/internal/types"
 	"log"
 	"net/http"
+
+	"github.com/yurchenkosv/metric-service/internal/routers"
+	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
 var (

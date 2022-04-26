@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/yurchenkosv/metric-service/internal/functions"
-	"github.com/yurchenkosv/metric-service/internal/types"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/yurchenkosv/metric-service/internal/functions"
+	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
 func main() {

@@ -1,9 +1,10 @@
 package functions
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/yurchenkosv/metric-service/internal/types"
-	"testing"
 )
 
 func TestCollectMemMetrics(t *testing.T) {
