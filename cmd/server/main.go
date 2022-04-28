@@ -1,15 +1,22 @@
 package main
 
 import (
-	"github.com/yurchenkosv/metric-service/internal/handlers"
 	"log"
 	"net/http"
+
+	"github.com/yurchenkosv/metric-service/internal/routers"
+	"github.com/yurchenkosv/metric-service/internal/types"
+)
+
+var (
+	server = types.URLServer{}
 )
 
 func main() {
-	http.HandleFunc("/update/", handlers.HandleMetric)
-	server := &http.Server{
-		Addr: ":8080",
-	}
-	log.Fatal(server.ListenAndServe())
+	router := routers.NewRouter()
+	serveFor := server.
+		SetHost("localhost").
+		SetPort("8080").
+		Build()
+	log.Fatal(http.ListenAndServe(serveFor, router))
 }
