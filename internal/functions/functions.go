@@ -1,7 +1,6 @@
 package functions
 
 import (
-	"fmt"
 	"log"
 	"math/rand"
 	"runtime"
@@ -15,44 +14,80 @@ var (
 	server = types.URLServer{}
 )
 
-func CollectMemMetrics(poolCount int) types.MemMetrics {
+//type metricConstraint interface {
+//	*types.Counter | *types.Gauge
+//}
+
+//func appendMetric[T metricConstraint](name string, value T, mType string, metrics *types.Metrics) {
+//	metric := types.Metric{
+//		ID:    name,
+//		MType: mType,
+//	}
+//	switch mType {
+//	case "gauge":
+//		metric.Value = types.Gauge(value)
+//	case "counter":
+//		append(metrics.Metric, types.Metric{
+//			ID:    name,
+//			MType: mType,
+//			Delta: types.Counter(value),
+//		})
+//
+//}
+func appendGaugeMetric(name string, value float64, metrics *types.Metrics) {
+	gauge := &value
+	metrics.Metric = append(metrics.Metric, types.Metric{
+		ID:    name,
+		MType: "gauge",
+		Value: gauge,
+	})
+}
+
+func appendCounterMetric(name string, value int64, metrics *types.Metrics) {
+	counter := &value
+	metrics.Metric = append(metrics.Metric, types.Metric{
+		ID:    name,
+		MType: "counter",
+		Delta: counter,
+	})
+}
+
+func CollectMemMetrics(poolCount int) types.Metrics {
 	var rtm runtime.MemStats
-	var memoryMetrics types.MemMetrics
-	metrics := make(map[string]types.Gauge)
-	metrics["Alloc"] = types.Gauge(rtm.Alloc)
-	metrics["BuckHashSys"] = types.Gauge(rtm.BuckHashSys)
-	metrics["Frees"] = types.Gauge(rtm.Frees)
-	metrics["GCCPUFraction"] = types.Gauge(rtm.GCCPUFraction)
-	metrics["GCSys"] = types.Gauge(rtm.GCSys)
-	metrics["HeapAlloc"] = types.Gauge(rtm.HeapAlloc)
-	metrics["HeapIdle"] = types.Gauge(rtm.HeapIdle)
-	metrics["HeapInuse"] = types.Gauge(rtm.HeapInuse)
-	metrics["HeapObjects"] = types.Gauge(rtm.HeapObjects)
-	metrics["HeapReleased"] = types.Gauge(rtm.HeapReleased)
-	metrics["HeapSys"] = types.Gauge(rtm.HeapSys)
-	metrics["LastGC"] = types.Gauge(rtm.LastGC)
-	metrics["Lookups"] = types.Gauge(rtm.Lookups)
-	metrics["MCacheInuse"] = types.Gauge(rtm.MCacheInuse)
-	metrics["MCacheSys"] = types.Gauge(rtm.MCacheSys)
-	metrics["MSpanInuse"] = types.Gauge(rtm.MSpanInuse)
-	metrics["MSpanSys"] = types.Gauge(rtm.MSpanSys)
-	metrics["Mallocs"] = types.Gauge(rtm.Mallocs)
-	metrics["NextGC"] = types.Gauge(rtm.NextGC)
-	metrics["NumForcedGC"] = types.Gauge(rtm.NumForcedGC)
-	metrics["NumGC"] = types.Gauge(rtm.NumGC)
-	metrics["OtherSys"] = types.Gauge(rtm.OtherSys)
-	metrics["PauseTotalNs"] = types.Gauge(rtm.PauseTotalNs)
-	metrics["StackInuse"] = types.Gauge(rtm.StackInuse)
-	metrics["StackSys"] = types.Gauge(rtm.StackSys)
-	metrics["Sys"] = types.Gauge(rtm.Sys)
-	metrics["TotalAlloc"] = types.Gauge(rtm.TotalAlloc)
-	metrics["RandomValue"] = types.Gauge(rand.Float64())
-	memoryMetrics.PollCount = types.Counter(poolCount)
-	memoryMetrics.GaugeMetrics = metrics
+	var memoryMetrics types.Metrics
+	appendGaugeMetric("Alloc", float64(rtm.Alloc), &memoryMetrics)
+	appendGaugeMetric("BuckHashSys", float64(rtm.BuckHashSys), &memoryMetrics)
+	appendGaugeMetric("Frees", float64(rtm.Frees), &memoryMetrics)
+	appendGaugeMetric("GCCPUFraction", float64(rtm.GCCPUFraction), &memoryMetrics)
+	appendGaugeMetric("GCSys", float64(rtm.GCSys), &memoryMetrics)
+	appendGaugeMetric("HeapAlloc", float64(rtm.HeapAlloc), &memoryMetrics)
+	appendGaugeMetric("HeapIdle", float64(rtm.HeapIdle), &memoryMetrics)
+	appendGaugeMetric("HeapInuse", float64(rtm.HeapInuse), &memoryMetrics)
+	appendGaugeMetric("HeapObjects", float64(rtm.HeapObjects), &memoryMetrics)
+	appendGaugeMetric("HeapReleased", float64(rtm.HeapReleased), &memoryMetrics)
+	appendGaugeMetric("HeapSys", float64(rtm.HeapSys), &memoryMetrics)
+	appendGaugeMetric("LastGC", float64(rtm.LastGC), &memoryMetrics)
+	appendGaugeMetric("Lookups", float64(rtm.Lookups), &memoryMetrics)
+	appendGaugeMetric("MCacheInuse", float64(rtm.MCacheInuse), &memoryMetrics)
+	appendGaugeMetric("MCacheSys", float64(rtm.MCacheSys), &memoryMetrics)
+	appendGaugeMetric("MSpanInuse", float64(rtm.MSpanInuse), &memoryMetrics)
+	appendGaugeMetric("MSpanSys", float64(rtm.MSpanSys), &memoryMetrics)
+	appendGaugeMetric("Mallocs", float64(rtm.Mallocs), &memoryMetrics)
+	appendGaugeMetric("NextGC", float64(rtm.NextGC), &memoryMetrics)
+	appendGaugeMetric("NumForcedGC", float64(rtm.NumForcedGC), &memoryMetrics)
+	appendGaugeMetric("NumGC", float64(rtm.NumGC), &memoryMetrics)
+	appendGaugeMetric("OtherSys", float64(rtm.OtherSys), &memoryMetrics)
+	appendGaugeMetric("PauseTotalNs", float64(rtm.PauseTotalNs), &memoryMetrics)
+	appendGaugeMetric("StackInuse", float64(rtm.StackInuse), &memoryMetrics)
+	appendGaugeMetric("StackSys", float64(rtm.StackSys), &memoryMetrics)
+	appendGaugeMetric("Sys", float64(rtm.Sys), &memoryMetrics)
+	appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc), &memoryMetrics)
+	appendGaugeMetric("RandomValue", rand.Float64(), &memoryMetrics)
+	appendCounterMetric("PollCount", int64(poolCount), &memoryMetrics)
 	return memoryMetrics
 }
 
-func PushMemMetrics(m types.MemMetrics) {
+func PushMemMetrics(m types.Metrics) {
 	apiServer := server.
 		SetHost("localhost").
 		SetPort("8080").
@@ -65,31 +100,14 @@ func PushMemMetrics(m types.MemMetrics) {
 		SetRetryMaxWaitTime(5 * time.Second).
 		SetBaseURL(apiServer)
 
-	for metricName, metricValue := range m.GaugeMetrics {
+	for i := range m.Metric {
 		_, err := client.R().
-			SetHeader("Content-Type", "text/plain").
-			Post(
-				fmt.Sprintf(
-					"/update/gauge/%s/%v",
-					metricName,
-					metricValue,
-				),
-			)
+			SetHeader("Content-Type", "application/json").
+			SetBody(m.Metric[i]).
+			Post("/update")
 		if err != nil {
 			log.Panic(err)
 		}
-	}
-	_, err := client.R().
-		SetHeader("Content-Type", "text/plain").
-		Post(
-			fmt.Sprintf(
-				"/update/counter/%s/%v",
-				"PollCount",
-				m.PollCount,
-			),
-		)
-	if err != nil {
-		log.Panic(err)
 	}
 }
 
