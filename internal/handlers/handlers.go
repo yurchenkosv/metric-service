@@ -122,6 +122,7 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	data, err = json.Marshal(metric)
+	checkForError(err)
 	writer.Header().Add("Content-Type", "application/json")
 	writer.Write(data)
 }
