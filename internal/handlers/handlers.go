@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
+	"github.com/yurchenkosv/metric-service/internal/storage"
 	"github.com/yurchenkosv/metric-service/internal/types"
 	"io"
 	"net/http"
 	"strconv"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/yurchenkosv/metric-service/internal/storage"
+	"sync"
 )
 
 var mapStorage = storage.NewMapStorage()
+var mutex sync.Mutex
 
 func checkMetricType(metricType string, w http.ResponseWriter) {
 	if metricType != "counter" && metricType != "gauge" {
@@ -36,6 +37,7 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	checkForError(err)
 
 	metricType := metrics.MType
+	mutex.Lock()
 	if metricType == "counter" {
 		counter := types.Counter(*metrics.Delta)
 		mapStorage.AddCounter(metrics.ID, counter)
@@ -44,6 +46,7 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 		gauge := types.Gauge(*metrics.Value)
 		mapStorage.AddGauge(metrics.ID, gauge)
 	}
+	mutex.Unlock()
 
 }
 
