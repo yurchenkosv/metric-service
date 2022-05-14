@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/caarlos0/env/v6"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,9 +12,20 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
+var (
+	cfg = types.Config{}
+)
+
+func init() {
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
-	mainLoop := time.NewTicker(2 * time.Second)
-	pushLoop := time.NewTicker(10 * time.Second)
+	mainLoop := time.NewTicker(cfg.PollInterval)
+	pushLoop := time.NewTicker(cfg.ReportInterval)
 	mainLoopStop := make(chan bool)
 	memMetrics := make(chan types.Metrics)
 	osSignal := make(chan os.Signal, 3)
@@ -35,7 +48,7 @@ func main() {
 
 	go func() {
 		for {
-			functions.PushMemMetrics(<-memMetrics)
+			functions.PushMemMetrics(<-memMetrics, &cfg)
 		}
 	}()
 
