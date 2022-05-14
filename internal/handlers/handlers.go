@@ -92,31 +92,29 @@ func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 }
 
 func HandleGetAllMetricsJson(writer http.ResponseWriter, request *http.Request) {
-	var metrics []types.Metric
+	var metric types.Metric
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	data, err := io.ReadAll(request.Body)
 	checkForError(err)
-	err = json.Unmarshal(data, &metrics)
+	err = json.Unmarshal(data, &metric)
 	checkForError(err)
 
-	for i := range metrics {
-		if metrics[i].MType == "counter" {
-			val, err := mapStorage.GetCounterByKey(metrics[i].ID)
-			checkForError(err)
-			counter := int64(val)
-			metrics[i].Delta = &counter
-		}
-		if metrics[i].MType == "gauge" {
-			val, err := mapStorage.GetGaugeByKey(metrics[i].ID)
-			checkForError(err)
-			gauge := float64(val)
-			metrics[i].Value = &gauge
-		}
+	if metric.MType == "counter" {
+		val, err := mapStorage.GetCounterByKey(metric.ID)
+		checkForError(err)
+		counter := int64(val)
+		metric.Delta = &counter
+	}
+	if metric.MType == "gauge" {
+		val, err := mapStorage.GetGaugeByKey(metric.ID)
+		checkForError(err)
+		gauge := float64(val)
+		metric.Value = &gauge
 	}
 
-	data, err = json.Marshal(metrics)
+	data, err = json.Marshal(metric)
 	writer.Write(data)
 }
