@@ -101,10 +101,11 @@ func PushMemMetrics(m types.Metrics) {
 		SetBaseURL(apiServer)
 
 	for i := range m.Metric {
+		metric := m.Metric[i]
 		go func() {
 			_, err := client.R().
 				SetHeader("Content-Type", "application/json").
-				SetBody(m.Metric[i]).
+				SetBody(metric).
 				Post("/update")
 			if err != nil {
 				log.Panic(err)

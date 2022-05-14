@@ -37,6 +37,7 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	checkForError(err)
 
 	metricType := metrics.MType
+	checkMetricType(metricType, writer)
 	mutex.Lock()
 	if metricType == "counter" {
 		counter := types.Counter(*metrics.Delta)
@@ -60,6 +61,7 @@ func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 	metricValue := chi.URLParam(request, "metricValue")
 
 	checkMetricType(metricType, writer)
+	mutex.Lock()
 	if metricType == "counter" {
 		val, err := strconv.ParseInt(metricValue, 10, 64)
 		if err != nil {
@@ -74,6 +76,7 @@ func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 		}
 		mapStorage.AddGauge(metricName, types.Gauge(val))
 	}
+	mutex.Unlock()
 }
 
 func HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
