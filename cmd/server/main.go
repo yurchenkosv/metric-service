@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/caarlos0/env/v6"
 	"log"
 	"net/http"
 
@@ -9,14 +10,17 @@ import (
 )
 
 var (
-	server = types.URLServer{}
+	cfg = types.Config{}
 )
+
+func init() {
+	err := env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func main() {
 	router := routers.NewRouter()
-	serveFor := server.
-		SetHost("localhost").
-		SetPort("8080").
-		Build()
-	log.Fatal(http.ListenAndServe(serveFor, router))
+	log.Fatal(http.ListenAndServe(cfg.Address, router))
 }

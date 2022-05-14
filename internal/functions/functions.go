@@ -10,10 +10,6 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
-var (
-	server = types.URLServer{}
-)
-
 //type metricConstraint interface {
 //	*types.Counter | *types.Gauge
 //}
@@ -88,18 +84,12 @@ func CollectMemMetrics(poolCount int) types.Metrics {
 	return memoryMetrics
 }
 
-func PushMemMetrics(m types.Metrics) {
-	apiServer := server.
-		SetHost("localhost").
-		SetPort("8080").
-		SetSchema("http").
-		Build()
-
+func PushMemMetrics(m types.Metrics, cfg *types.Config) {
 	client := resty.New()
 	client.SetRetryCount(3).
 		SetRetryWaitTime(2 * time.Second).
 		SetRetryMaxWaitTime(5 * time.Second).
-		SetBaseURL(apiServer)
+		SetBaseURL("http://" + cfg.Address)
 
 	for i := range m.Metric {
 		metric := m.Metric[i]
