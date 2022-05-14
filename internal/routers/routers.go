@@ -15,14 +15,14 @@ func NewRouter() chi.Router {
 	router.Use(middleware.Recoverer)
 
 	router.Route("/update", func(r chi.Router) {
-		r.Post("/", handlers.HandleUpdateMetricJson)
+		r.Post("/", handlers.HandleUpdateMetricJSON)
 		r.Post("/{metricType}/{metricName}/{metricValue}", handlers.HandleUpdateMetric)
 	})
 	router.Route("/", func(r chi.Router) {
 		r.Get("/", handlers.HandleGetAllMetrics)
 	})
 	router.Route("/value", func(r chi.Router) {
-		r.Post("/", handlers.HandleGetAllMetricsJson)
+		r.Post("/", handlers.HandleGetAllMetricsJSON)
 		r.Get("/{metricType}/{metricName}", handlers.HandleGetMetric)
 	})
 	return router

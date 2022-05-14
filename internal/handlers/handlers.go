@@ -26,7 +26,7 @@ func checkForError(err error) {
 	}
 }
 
-func HandleUpdateMetricJson(writer http.ResponseWriter, request *http.Request) {
+func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metrics types.Metric
 
 	body, err := io.ReadAll(request.Body)
@@ -91,7 +91,7 @@ func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte(val))
 }
 
-func HandleGetAllMetricsJson(writer http.ResponseWriter, request *http.Request) {
+func HandleGetAllMetricsJSON(writer http.ResponseWriter, request *http.Request) {
 	var metric types.Metric
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
