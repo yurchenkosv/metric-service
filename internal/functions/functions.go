@@ -55,6 +55,7 @@ func appendCounterMetric(name string, value int64, metrics *types.Metrics) {
 func CollectMemMetrics(poolCount int) types.Metrics {
 	var rtm runtime.MemStats
 	var memoryMetrics types.Metrics
+	runtime.ReadMemStats(&rtm)
 	appendGaugeMetric("Alloc", float64(rtm.Alloc), &memoryMetrics)
 	appendGaugeMetric("BuckHashSys", float64(rtm.BuckHashSys), &memoryMetrics)
 	appendGaugeMetric("Frees", float64(rtm.Frees), &memoryMetrics)
