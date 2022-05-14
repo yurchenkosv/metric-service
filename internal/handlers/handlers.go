@@ -91,7 +91,7 @@ func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 	writer.Write([]byte(val))
 }
 
-func HandleGetAllMetricsJSON(writer http.ResponseWriter, request *http.Request) {
+func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metric types.Metric
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
@@ -104,17 +104,24 @@ func HandleGetAllMetricsJSON(writer http.ResponseWriter, request *http.Request) 
 
 	if metric.MType == "counter" {
 		val, err := mapStorage.GetCounterByKey(metric.ID)
-		checkForError(err)
+		if err != nil {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
 		counter := int64(val)
 		metric.Delta = &counter
 	}
 	if metric.MType == "gauge" {
 		val, err := mapStorage.GetGaugeByKey(metric.ID)
-		checkForError(err)
+		if err != nil {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
 		gauge := float64(val)
 		metric.Value = &gauge
 	}
 
 	data, err = json.Marshal(metric)
+	writer.Header().Add("Content-Type", "application/json")
 	writer.Write(data)
 }

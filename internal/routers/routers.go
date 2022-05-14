@@ -22,7 +22,7 @@ func NewRouter() chi.Router {
 		r.Get("/", handlers.HandleGetAllMetrics)
 	})
 	router.Route("/value", func(r chi.Router) {
-		r.Post("/", handlers.HandleGetAllMetricsJSON)
+		r.Post("/", handlers.HandleGetMetricJSON)
 		r.Get("/{metricType}/{metricName}", handlers.HandleGetMetric)
 	})
 	return router
