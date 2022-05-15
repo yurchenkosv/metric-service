@@ -11,7 +11,6 @@ import (
 	"sync"
 )
 
-//var mapStorage = storage.NewMapStorage()
 var mutex sync.Mutex
 
 func checkMetricType(metricType string, w http.ResponseWriter) {
@@ -32,6 +31,7 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	store := ctx.Value("storage").(*storage.Repository)
 	mapStorage := *store
+
 	body, err := io.ReadAll(request.Body)
 	checkForError(err)
 	err = json.Unmarshal(body, &metrics)
