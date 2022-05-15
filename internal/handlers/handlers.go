@@ -29,7 +29,7 @@ func checkForError(err error) {
 func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metrics types.Metric
 	ctx := request.Context()
-	store := ctx.Value("storage").(*storage.Repository)
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 	mapStorage := *store
 
 	body, err := io.ReadAll(request.Body)
@@ -54,7 +54,7 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 
 	ctx := request.Context()
-	store := ctx.Value("storage").(*storage.Repository)
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 	mapStorage := *store
 
 	metricType := chi.URLParam(request, "metricType")
@@ -82,7 +82,7 @@ func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 
 func HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	store := ctx.Value("storage").(*storage.Repository)
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 	mapStorage := *store
 
 	metricType := chi.URLParam(request, "metricType")
@@ -99,7 +99,7 @@ func HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
 
 func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	store := ctx.Value("storage").(*storage.Repository)
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 	mapStorage := *store
 
 	val := mapStorage.GetAllMetrics()
@@ -114,7 +114,7 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	ctx := request.Context()
-	store := ctx.Value("storage").(*storage.Repository)
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 	mapStorage := *store
 
 	data, err := io.ReadAll(request.Body)

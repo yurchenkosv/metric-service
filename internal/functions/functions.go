@@ -124,11 +124,15 @@ func FlushMetricsToDisk(cfg *types.Config, m storage.Repository) {
 	}
 
 	data, err := json.Marshal(m.AsMetrics())
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	_, err = file.Write(data)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	file.Close()
 	mutex.Unlock()
 }
@@ -139,7 +143,9 @@ func ReadMetricsFromDisk(cnf *types.Config, repository *storage.Repository) stor
 
 	data, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		os.Create(fileLocation)
+		return repo
 	}
 	metrics := types.Metrics{}
 	err = json.Unmarshal(data, &metrics)

@@ -12,7 +12,7 @@ func AppendConfigToContext(config *types.Config) func(next http.Handler) http.Ha
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "config", config)
+			ctx = context.WithValue(ctx, types.ContextKey("config"), config)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(fn)
@@ -23,7 +23,7 @@ func AddStorage(store *storage.Repository) func(next http.Handler) http.Handler 
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, "storage", store)
+			ctx = context.WithValue(ctx, types.ContextKey("storage"), store)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(fn)
@@ -33,9 +33,9 @@ func AddStorage(store *storage.Repository) func(next http.Handler) http.Handler 
 func SaveMetricToFile(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		config := ctx.Value("config").(*types.Config)
+		config := ctx.Value(types.ContextKey("config")).(*types.Config)
 		if config.StoreInterval == 0 {
-			store := ctx.Value("storage").(*storage.Repository)
+			store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 			mapStorage := *store
 			functions.FlushMetricsToDisk(config, mapStorage)
 		}

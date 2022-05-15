@@ -26,3 +26,9 @@ type Config struct {
 	StoreFile      string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
 	Restore        bool          `env:"RESTORE" envDefault:"true"`
 }
+
+type ContextKey string
+
+func (c ContextKey) String() string {
+	return string(c)
+}
