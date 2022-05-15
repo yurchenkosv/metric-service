@@ -1,8 +1,11 @@
 package functions
 
 import (
+	"encoding/json"
+	"github.com/yurchenkosv/metric-service/internal/storage"
 	"log"
 	"math/rand"
+	"os"
 	"runtime"
 	"time"
 
@@ -104,6 +107,29 @@ func PushMemMetrics(m types.Metrics, cfg *types.Config) {
 		}()
 	}
 }
+
+func FlushMetricsToDisk(cfg *types.Config, m storage.Repository) {
+
+	fileLocation := cfg.StoreFile
+	fileBits := os.O_WRONLY | os.O_CREATE
+
+	file, err := os.OpenFile(fileLocation, fileBits, 0600)
+	defer file.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data, err := json.Marshal(m.AsMetrics())
+
+	_, err = file.Write(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+//func ReadMetricsFromDisk(cnf *types.Config) types.Metrics {
+//	fileLocation := cnf.StoreFile
+//}
 
 func Cleanup(mainLoop *time.Ticker, pushLoop *time.Ticker, mainLoopStop chan bool) {
 	mainLoop.Stop()

@@ -16,4 +16,5 @@ type Repository interface {
 	GetCounterByKey(string) (types.Counter, error)
 	GetGaugeByKey(string) (types.Gauge, error)
 	GetAllMetrics() string
+	AsMetrics() types.Metrics
 }
