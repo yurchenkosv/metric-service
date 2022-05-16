@@ -20,19 +20,18 @@ var (
 	storeLoop  *time.Ticker
 )
 
-func init() {
+func main() {
+	osSignal := make(chan os.Signal, 1)
+	storeLoopStop := make(chan bool)
 	err := cfg.Parse()
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	if cfg.Restore {
 		mapStorage = functions.ReadMetricsFromDisk(&cfg, &mapStorage)
 	}
-}
 
-func main() {
-	osSignal := make(chan os.Signal, 1)
-	storeLoopStop := make(chan bool)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
 
 	go func() {
