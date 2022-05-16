@@ -1,8 +1,8 @@
 package types
 
 import (
-	"flag"
 	"github.com/caarlos0/env/v6"
+	flag "github.com/spf13/pflag"
 	"time"
 )
 
@@ -35,9 +35,9 @@ type ServerConfig struct {
 
 func (c *AgentConfig) Parse() error {
 	err := env.Parse(c)
-	flag.StringVar(&c.Address, "a", c.Address, "http address to send metrics in format localhost:8080")
-	flag.DurationVar(&c.ReportInterval, "r", c.ReportInterval, "interval to send metrics to server. Inactive for server.")
-	flag.DurationVar(&c.PollInterval, "p", c.PollInterval, "Interval to collect metrics. Inactive for server.")
+	flag.StringVarP(&c.Address, "address", "a", c.Address, "http address to send metrics in format localhost:8080")
+	flag.DurationVarP(&c.ReportInterval, "report", "r", c.ReportInterval, "interval to send metrics to server. Inactive for server.")
+	flag.DurationVarP(&c.PollInterval, "poll", "p", c.PollInterval, "Interval to collect metrics. Inactive for server.")
 	flag.Parse()
 
 	return err
@@ -45,10 +45,10 @@ func (c *AgentConfig) Parse() error {
 
 func (c *ServerConfig) Parse() error {
 	err := env.Parse(c)
-	flag.StringVar(&c.Address, "a", c.Address, "http address in format localhost:8080")
-	flag.DurationVar(&c.StoreInterval, "i", c.StoreInterval, "when to flush metrics to disk. Inactive for agent.")
-	flag.StringVar(&c.StoreFile, "f", c.StoreFile, "path to file where metrics are stored. Inactive for agent.")
-	flag.BoolVar(&c.Restore, "r", c.Restore, "If set to true, read file in -f flag to restore metrics state")
+	flag.StringVarP(&c.Address, "address", "a", c.Address, "http address in format localhost:8080")
+	flag.DurationVarP(&c.StoreInterval, "interval", "i", c.StoreInterval, "when to flush metrics to disk. Inactive for agent.")
+	flag.StringVarP(&c.StoreFile, "filepath", "f", c.StoreFile, "path to file where metrics are stored. Inactive for agent.")
+	flag.BoolVarP(&c.Restore, "restore", "r", c.Restore, "If set to true, read file in -f flag to restore metrics state")
 	flag.Parse()
 
 	return err
