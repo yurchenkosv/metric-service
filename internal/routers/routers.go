@@ -9,7 +9,7 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
-func NewRouter(cfg *types.Config, store *storage.Repository) chi.Router {
+func NewRouter(cfg *types.ServerConfig, store *storage.Repository) chi.Router {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)

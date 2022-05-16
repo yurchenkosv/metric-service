@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/caarlos0/env/v6"
 	"github.com/yurchenkosv/metric-service/internal/functions"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"log"
@@ -16,24 +15,23 @@ import (
 )
 
 var (
-	cfg        = types.Config{}
+	cfg        = types.ServerConfig{}
 	mapStorage = storage.NewMapStorage()
 	storeLoop  *time.Ticker
 )
 
-func init() {
-	err := env.Parse(&cfg)
+func main() {
+	osSignal := make(chan os.Signal, 1)
+	storeLoopStop := make(chan bool)
+	err := cfg.Parse()
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	if cfg.Restore {
 		mapStorage = functions.ReadMetricsFromDisk(&cfg, &mapStorage)
 	}
-}
 
-func main() {
-	osSignal := make(chan os.Signal, 1)
-	storeLoopStop := make(chan bool)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
 
 	go func() {

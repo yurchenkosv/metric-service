@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func AppendConfigToContext(config *types.Config) func(next http.Handler) http.Handler {
+func AppendConfigToContext(config *types.ServerConfig) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -33,7 +33,7 @@ func AddStorage(store *storage.Repository) func(next http.Handler) http.Handler 
 func SaveMetricToFile(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		config := ctx.Value(types.ContextKey("config")).(*types.Config)
+		config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
 		if config.StoreInterval == 0 {
 			store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 			mapStorage := *store

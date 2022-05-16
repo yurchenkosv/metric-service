@@ -92,7 +92,7 @@ func CollectMemMetrics(poolCount int) types.Metrics {
 	return memoryMetrics
 }
 
-func PushMemMetrics(m types.Metrics, cfg *types.Config) {
+func PushMemMetrics(m types.Metrics, cfg *types.AgentConfig) {
 	client := resty.New()
 	client.SetRetryCount(3).
 		SetRetryWaitTime(2 * time.Second).
@@ -113,7 +113,7 @@ func PushMemMetrics(m types.Metrics, cfg *types.Config) {
 	}
 }
 
-func FlushMetricsToDisk(cfg *types.Config, m storage.Repository) {
+func FlushMetricsToDisk(cfg *types.ServerConfig, m storage.Repository) {
 	fileLocation := cfg.StoreFile
 	fileBits := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 
@@ -137,7 +137,7 @@ func FlushMetricsToDisk(cfg *types.Config, m storage.Repository) {
 	mutex.Unlock()
 }
 
-func ReadMetricsFromDisk(cnf *types.Config, repository *storage.Repository) storage.Repository {
+func ReadMetricsFromDisk(cnf *types.ServerConfig, repository *storage.Repository) storage.Repository {
 	repo := *repository
 	fileLocation := cnf.StoreFile
 

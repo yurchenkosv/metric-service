@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/caarlos0/env/v6"
 	"log"
 	"os"
 	"os/signal"
@@ -13,11 +12,11 @@ import (
 )
 
 var (
-	cfg = types.Config{}
+	cfg = types.AgentConfig{}
 )
 
 func init() {
-	err := env.Parse(&cfg)
+	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
 	}
