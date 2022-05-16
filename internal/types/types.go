@@ -27,30 +27,30 @@ type AgentConfig struct {
 }
 
 type ServerConfig struct {
-	Address       string        `env:"ADDRESS" envDefault:"localhost:8080"`
-	StoreInterval time.Duration `env:"STORE_INTERVAL" envDefault:"300s"`
-	StoreFile     string        `env:"STORE_FILE" envDefault:"/tmp/devops-metrics-db.json"`
-	Restore       bool          `env:"RESTORE" envDefault:"true"`
+	Address       string        `env:"ADDRESS"`
+	StoreInterval time.Duration `env:"STORE_INTERVAL"`
+	StoreFile     string        `env:"STORE_FILE"`
+	Restore       bool          `env:"RESTORE"`
 }
 
 func (c *AgentConfig) Parse() error {
-	err := env.Parse(c)
 	flag.StringVarP(&c.Address, "address", "a", c.Address, "http address to send metrics in format localhost:8080")
 	flag.DurationVarP(&c.ReportInterval, "report", "r", c.ReportInterval, "interval to send metrics to server. Inactive for server.")
 	flag.DurationVarP(&c.PollInterval, "poll", "p", c.PollInterval, "Interval to collect metrics. Inactive for server.")
 	flag.Parse()
 
+	err := env.Parse(c)
 	return err
 }
 
 func (c *ServerConfig) Parse() error {
-	err := env.Parse(c)
-	flag.StringVarP(&c.Address, "address", "a", c.Address, "http address in format localhost:8080")
-	flag.DurationVarP(&c.StoreInterval, "interval", "i", c.StoreInterval, "when to flush metrics to disk. Inactive for agent.")
-	flag.StringVarP(&c.StoreFile, "filepath", "f", c.StoreFile, "path to file where metrics are stored. Inactive for agent.")
-	flag.BoolVarP(&c.Restore, "restore", "r", c.Restore, "If set to true, read file in -f flag to restore metrics state")
+	flag.StringVarP(&c.Address, "address", "a", "localhost:8080", "http address in format localhost:8080")
+	flag.DurationVarP(&c.StoreInterval, "interval", "i", 300*time.Second, "when to flush metrics to disk. Inactive for agent.")
+	flag.StringVarP(&c.StoreFile, "filepath", "f", "/tmp/devops-metrics-db.json", "path to file where metrics are stored. Inactive for agent.")
+	flag.BoolVarP(&c.Restore, "restore", "r", true, "If set to true, read file in -f flag to restore metrics state")
 	flag.Parse()
 
+	err := env.Parse(c)
 	return err
 }
 
