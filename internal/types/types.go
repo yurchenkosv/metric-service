@@ -1,8 +1,8 @@
 package types
 
 import (
+	"flag"
 	"github.com/caarlos0/env/v6"
-	flag "github.com/spf13/pflag"
 	"time"
 )
 
