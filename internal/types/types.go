@@ -3,6 +3,8 @@ package types
 import (
 	"flag"
 	"github.com/caarlos0/env/v6"
+	"io"
+	"net/http"
 	"time"
 )
 
@@ -58,4 +60,14 @@ type ContextKey string
 
 func (c ContextKey) String() string {
 	return string(c)
+}
+
+type GzipWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
+}
+
+func (w GzipWriter) Write(b []byte) (int, error) {
+	// w.Writer будет отвечать за gzip-сжатие, поэтому пишем в него
+	return w.Writer.Write(b)
 }

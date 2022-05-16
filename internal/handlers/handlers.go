@@ -103,6 +103,7 @@ func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 	mapStorage := *store
 
 	val := mapStorage.GetAllMetrics()
+	writer.Header().Set("Content-Type", "text/html")
 	writer.Write([]byte(val))
 }
 
