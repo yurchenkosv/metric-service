@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/caarlos0/env/v6"
 	"github.com/yurchenkosv/metric-service/internal/functions"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"log"
@@ -16,13 +15,13 @@ import (
 )
 
 var (
-	cfg        = types.Config{}
+	cfg        = types.ServerConfig{}
 	mapStorage = storage.NewMapStorage()
 	storeLoop  *time.Ticker
 )
 
 func init() {
-	err := env.Parse(&cfg)
+	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
 	}
