@@ -60,7 +60,12 @@ func GzipDecompress(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		defer gz.Close()
+
 		body, err := io.ReadAll(gz)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
 		r.Body = ioutil.NopCloser(bytes.NewReader(body))
 		next.ServeHTTP(w, r)
 	}
