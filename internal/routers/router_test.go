@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -122,9 +123,13 @@ func TestRouter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := types.ServerConfig{}
+			cfg := types.ServerConfig{
+				Address:       "localhost:8080",
+				StoreInterval: 300 * time.Second,
+				StoreFile:     "/tmp/data.json",
+				Restore:       false,
+			}
 			store := storage.NewMapStorage()
-			cfg.Parse()
 			r := NewRouter(&cfg, &store)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
