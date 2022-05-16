@@ -17,6 +17,8 @@ func NewRouter(cfg *types.ServerConfig, store *storage.Repository) chi.Router {
 	router.Use(middleware.Recoverer)
 	router.Use(middlewares.AppendConfigToContext(cfg))
 	router.Use(middlewares.AddStorage(store))
+	router.Use(middlewares.GzipCompress)
+	router.Use(middlewares.GzipDecompress)
 
 	router.With(middlewares.SaveMetricToFile).Route("/update", func(r chi.Router) {
 		r.Post("/", handlers.HandleUpdateMetricJSON)
