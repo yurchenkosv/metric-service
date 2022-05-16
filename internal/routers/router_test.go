@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"github.com/caarlos0/env/v6"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"github.com/yurchenkosv/metric-service/internal/types"
 	"io/ioutil"
@@ -125,7 +124,7 @@ func TestRouter(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := types.ServerConfig{}
 			store := storage.NewMapStorage()
-			env.Parse(&cfg)
+			cfg.Parse()
 			r := NewRouter(&cfg, &store)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
