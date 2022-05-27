@@ -65,3 +65,24 @@ func (m *mapStorage) GetAllMetrics() string {
 	}
 	return metrics
 }
+
+func (m *mapStorage) AsMetrics() types.Metrics {
+	var metrics types.Metrics
+	for k, v := range m.CounterMetric {
+		counter := int64(v)
+		metrics.Metric = append(metrics.Metric, types.Metric{
+			ID:    k,
+			MType: "counter",
+			Delta: &counter,
+		})
+	}
+	for k, v := range m.GaugeMetric {
+		gauge := float64(v)
+		metrics.Metric = append(metrics.Metric, types.Metric{
+			ID:    k,
+			MType: "gauge",
+			Value: &gauge,
+		})
+	}
+	return metrics
+}

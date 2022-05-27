@@ -1,17 +1,18 @@
 package functions
 
 import (
+	"encoding/json"
+	"github.com/yurchenkosv/metric-service/internal/storage"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/yurchenkosv/metric-service/internal/types"
-)
-
-var (
-	server = types.URLServer{}
 )
 
 //type metricConstraint interface {
@@ -34,6 +35,9 @@ var (
 //		})
 //
 //}
+
+var mutex sync.Mutex
+
 func appendGaugeMetric(name string, value float64, metrics *types.Metrics) {
 	gauge := &value
 	metrics.Metric = append(metrics.Metric, types.Metric{
@@ -88,18 +92,12 @@ func CollectMemMetrics(poolCount int) types.Metrics {
 	return memoryMetrics
 }
 
-func PushMemMetrics(m types.Metrics) {
-	apiServer := server.
-		SetHost("localhost").
-		SetPort("8080").
-		SetSchema("http").
-		Build()
-
+func PushMemMetrics(m types.Metrics, cfg *types.AgentConfig) {
 	client := resty.New()
 	client.SetRetryCount(3).
 		SetRetryWaitTime(2 * time.Second).
 		SetRetryMaxWaitTime(5 * time.Second).
-		SetBaseURL(apiServer)
+		SetBaseURL("http://" + cfg.Address)
 
 	for i := range m.Metric {
 		metric := m.Metric[i]
@@ -113,6 +111,61 @@ func PushMemMetrics(m types.Metrics) {
 			}
 		}()
 	}
+}
+
+func FlushMetricsToDisk(cfg *types.ServerConfig, m storage.Repository) {
+	fileLocation := cfg.StoreFile
+	fileBits := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+
+	mutex.Lock()
+	file, err := os.OpenFile(fileLocation, fileBits, 0600)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data, err := json.Marshal(m.AsMetrics())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = file.Write(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	file.Close()
+	mutex.Unlock()
+}
+
+func ReadMetricsFromDisk(cnf *types.ServerConfig, repository *storage.Repository) storage.Repository {
+	repo := *repository
+	fileLocation := cnf.StoreFile
+
+	data, err := ioutil.ReadFile(fileLocation)
+	if err != nil {
+		log.Println(err)
+		os.Create(fileLocation)
+		return repo
+	}
+	metrics := types.Metrics{}
+	err = json.Unmarshal(data, &metrics)
+	if err != nil {
+		log.Println(err)
+		return repo
+	}
+
+	for i := range metrics.Metric {
+		metricName := metrics.Metric[i].ID
+		if metrics.Metric[i].MType == "counter" {
+			metricValue := metrics.Metric[i].Delta
+			repo.AddCounter(metricName, types.Counter(*metricValue))
+		}
+		if metrics.Metric[i].MType == "gauge" {
+			metricValue := metrics.Metric[i].Value
+			repo.AddGauge(metricName, types.Gauge(*metricValue))
+		}
+	}
+	return repo
 }
 
 func Cleanup(mainLoop *time.Ticker, pushLoop *time.Ticker, mainLoopStop chan bool) {

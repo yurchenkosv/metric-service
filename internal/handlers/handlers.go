@@ -11,7 +11,6 @@ import (
 	"sync"
 )
 
-var mapStorage = storage.NewMapStorage()
 var mutex sync.Mutex
 
 func checkMetricType(metricType string, w http.ResponseWriter) {
@@ -29,16 +28,19 @@ func checkForError(err error) {
 
 func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metrics types.Metric
+	ctx := request.Context()
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
+	mapStorage := *store
 
 	body, err := io.ReadAll(request.Body)
 	checkForError(err)
-
 	err = json.Unmarshal(body, &metrics)
 	checkForError(err)
 
 	metricType := metrics.MType
 	checkMetricType(metricType, writer)
 	mutex.Lock()
+	defer mutex.Unlock()
 	if metricType == "counter" {
 		counter := types.Counter(*metrics.Delta)
 		mapStorage.AddCounter(metrics.ID, counter)
@@ -47,21 +49,21 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 		gauge := types.Gauge(*metrics.Value)
 		mapStorage.AddGauge(metrics.ID, gauge)
 	}
-	mutex.Unlock()
-
 }
 
 func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
-	//if request.Header.Get("Content-Type") != "text/plain" {
-	//	writer.WriteHeader(http.StatusBadRequest)
-	//	return
-	//}
+
+	ctx := request.Context()
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
+	mapStorage := *store
+
 	metricType := chi.URLParam(request, "metricType")
 	metricName := chi.URLParam(request, "metricName")
 	metricValue := chi.URLParam(request, "metricValue")
 
 	checkMetricType(metricType, writer)
 	mutex.Lock()
+	defer mutex.Unlock()
 	if metricType == "counter" {
 		val, err := strconv.ParseInt(metricValue, 10, 64)
 		if err != nil {
@@ -76,10 +78,13 @@ func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 		}
 		mapStorage.AddGauge(metricName, types.Gauge(val))
 	}
-	mutex.Unlock()
 }
 
 func HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
+	mapStorage := *store
+
 	metricType := chi.URLParam(request, "metricType")
 	metricName := chi.URLParam(request, "metricName")
 	checkMetricType(metricType, writer)
@@ -93,7 +98,12 @@ func HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
 }
 
 func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
+	mapStorage := *store
+
 	val := mapStorage.GetAllMetrics()
+	writer.Header().Set("Content-Type", "text/html")
 	writer.Write([]byte(val))
 }
 
@@ -103,6 +113,11 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	ctx := request.Context()
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
+	mapStorage := *store
+
 	data, err := io.ReadAll(request.Body)
 	checkForError(err)
 	err = json.Unmarshal(data, &metric)
