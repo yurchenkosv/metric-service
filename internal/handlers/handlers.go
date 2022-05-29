@@ -174,6 +174,7 @@ func HealthChecks(writer http.ResponseWriter, request *http.Request) {
 	config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
 	if config.DBDsn == "" {
 		writer.WriteHeader(http.StatusNotAcceptable)
+		return
 	}
 
 	conn, err := pgx.Connect(context.Background(), config.DBDsn)
