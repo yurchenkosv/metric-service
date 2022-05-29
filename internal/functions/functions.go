@@ -1,7 +1,11 @@
 package functions
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"io/ioutil"
 	"log"
@@ -38,57 +42,69 @@ import (
 
 var mutex sync.Mutex
 
-func appendGaugeMetric(name string, value float64, metrics *types.Metrics) {
+func appendGaugeMetric(name string, value float64, metrics *types.Metrics, cfg *types.AgentConfig) {
 	gauge := &value
+	hash := ""
+	if cfg.Key != "" {
+		msg := fmt.Sprintf("%s:gauge:%f", name, value)
+		hash = CreateSignedHash(msg, []byte(cfg.Key))
+	}
 	metrics.Metric = append(metrics.Metric, types.Metric{
 		ID:    name,
 		MType: "gauge",
 		Value: gauge,
+		Hash:  hash,
 	})
 }
 
-func appendCounterMetric(name string, value int64, metrics *types.Metrics) {
+func appendCounterMetric(name string, value int64, metrics *types.Metrics, cfg *types.AgentConfig) {
 	counter := &value
+	hash := ""
+	if cfg.Key != "" {
+		msg := fmt.Sprintf("%s:counter:%d", name, value)
+		hash = CreateSignedHash(msg, []byte(cfg.Key))
+	}
 	metrics.Metric = append(metrics.Metric, types.Metric{
 		ID:    name,
 		MType: "counter",
 		Delta: counter,
+		Hash:  hash,
 	})
 }
 
-func CollectMemMetrics(poolCount int) types.Metrics {
+func CollectMemMetrics(poolCount int, cfg *types.AgentConfig) types.Metrics {
 	var rtm runtime.MemStats
 	var memoryMetrics types.Metrics
 	runtime.ReadMemStats(&rtm)
-	appendGaugeMetric("Alloc", float64(rtm.Alloc), &memoryMetrics)
-	appendGaugeMetric("BuckHashSys", float64(rtm.BuckHashSys), &memoryMetrics)
-	appendGaugeMetric("Frees", float64(rtm.Frees), &memoryMetrics)
-	appendGaugeMetric("GCCPUFraction", float64(rtm.GCCPUFraction), &memoryMetrics)
-	appendGaugeMetric("GCSys", float64(rtm.GCSys), &memoryMetrics)
-	appendGaugeMetric("HeapAlloc", float64(rtm.HeapAlloc), &memoryMetrics)
-	appendGaugeMetric("HeapIdle", float64(rtm.HeapIdle), &memoryMetrics)
-	appendGaugeMetric("HeapInuse", float64(rtm.HeapInuse), &memoryMetrics)
-	appendGaugeMetric("HeapObjects", float64(rtm.HeapObjects), &memoryMetrics)
-	appendGaugeMetric("HeapReleased", float64(rtm.HeapReleased), &memoryMetrics)
-	appendGaugeMetric("HeapSys", float64(rtm.HeapSys), &memoryMetrics)
-	appendGaugeMetric("LastGC", float64(rtm.LastGC), &memoryMetrics)
-	appendGaugeMetric("Lookups", float64(rtm.Lookups), &memoryMetrics)
-	appendGaugeMetric("MCacheInuse", float64(rtm.MCacheInuse), &memoryMetrics)
-	appendGaugeMetric("MCacheSys", float64(rtm.MCacheSys), &memoryMetrics)
-	appendGaugeMetric("MSpanInuse", float64(rtm.MSpanInuse), &memoryMetrics)
-	appendGaugeMetric("MSpanSys", float64(rtm.MSpanSys), &memoryMetrics)
-	appendGaugeMetric("Mallocs", float64(rtm.Mallocs), &memoryMetrics)
-	appendGaugeMetric("NextGC", float64(rtm.NextGC), &memoryMetrics)
-	appendGaugeMetric("NumForcedGC", float64(rtm.NumForcedGC), &memoryMetrics)
-	appendGaugeMetric("NumGC", float64(rtm.NumGC), &memoryMetrics)
-	appendGaugeMetric("OtherSys", float64(rtm.OtherSys), &memoryMetrics)
-	appendGaugeMetric("PauseTotalNs", float64(rtm.PauseTotalNs), &memoryMetrics)
-	appendGaugeMetric("StackInuse", float64(rtm.StackInuse), &memoryMetrics)
-	appendGaugeMetric("StackSys", float64(rtm.StackSys), &memoryMetrics)
-	appendGaugeMetric("Sys", float64(rtm.Sys), &memoryMetrics)
-	appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc), &memoryMetrics)
-	appendGaugeMetric("RandomValue", rand.Float64(), &memoryMetrics)
-	appendCounterMetric("PollCount", int64(poolCount), &memoryMetrics)
+	appendGaugeMetric("Alloc", float64(rtm.Alloc), &memoryMetrics, cfg)
+	appendGaugeMetric("BuckHashSys", float64(rtm.BuckHashSys), &memoryMetrics, cfg)
+	appendGaugeMetric("Frees", float64(rtm.Frees), &memoryMetrics, cfg)
+	appendGaugeMetric("GCCPUFraction", float64(rtm.GCCPUFraction), &memoryMetrics, cfg)
+	appendGaugeMetric("GCSys", float64(rtm.GCSys), &memoryMetrics, cfg)
+	appendGaugeMetric("HeapAlloc", float64(rtm.HeapAlloc), &memoryMetrics, cfg)
+	appendGaugeMetric("HeapIdle", float64(rtm.HeapIdle), &memoryMetrics, cfg)
+	appendGaugeMetric("HeapInuse", float64(rtm.HeapInuse), &memoryMetrics, cfg)
+	appendGaugeMetric("HeapObjects", float64(rtm.HeapObjects), &memoryMetrics, cfg)
+	appendGaugeMetric("HeapReleased", float64(rtm.HeapReleased), &memoryMetrics, cfg)
+	appendGaugeMetric("HeapSys", float64(rtm.HeapSys), &memoryMetrics, cfg)
+	appendGaugeMetric("LastGC", float64(rtm.LastGC), &memoryMetrics, cfg)
+	appendGaugeMetric("Lookups", float64(rtm.Lookups), &memoryMetrics, cfg)
+	appendGaugeMetric("MCacheInuse", float64(rtm.MCacheInuse), &memoryMetrics, cfg)
+	appendGaugeMetric("MCacheSys", float64(rtm.MCacheSys), &memoryMetrics, cfg)
+	appendGaugeMetric("MSpanInuse", float64(rtm.MSpanInuse), &memoryMetrics, cfg)
+	appendGaugeMetric("MSpanSys", float64(rtm.MSpanSys), &memoryMetrics, cfg)
+	appendGaugeMetric("Mallocs", float64(rtm.Mallocs), &memoryMetrics, cfg)
+	appendGaugeMetric("NextGC", float64(rtm.NextGC), &memoryMetrics, cfg)
+	appendGaugeMetric("NumForcedGC", float64(rtm.NumForcedGC), &memoryMetrics, cfg)
+	appendGaugeMetric("NumGC", float64(rtm.NumGC), &memoryMetrics, cfg)
+	appendGaugeMetric("OtherSys", float64(rtm.OtherSys), &memoryMetrics, cfg)
+	appendGaugeMetric("PauseTotalNs", float64(rtm.PauseTotalNs), &memoryMetrics, cfg)
+	appendGaugeMetric("StackInuse", float64(rtm.StackInuse), &memoryMetrics, cfg)
+	appendGaugeMetric("StackSys", float64(rtm.StackSys), &memoryMetrics, cfg)
+	appendGaugeMetric("Sys", float64(rtm.Sys), &memoryMetrics, cfg)
+	appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc), &memoryMetrics, cfg)
+	appendGaugeMetric("RandomValue", rand.Float64(), &memoryMetrics, cfg)
+	appendCounterMetric("PollCount", int64(poolCount), &memoryMetrics, cfg)
 	return memoryMetrics
 }
 
@@ -173,4 +189,11 @@ func Cleanup(mainLoop *time.Ticker, pushLoop *time.Ticker, mainLoopStop chan boo
 	pushLoop.Stop()
 	mainLoopStop <- true
 	println("Program exit")
+}
+
+func CreateSignedHash(msg string, key []byte) string {
+	h := hmac.New(sha256.New, key)
+	h.Write([]byte(msg))
+	dst := hex.EncodeToString(h.Sum(nil))
+	return dst
 }

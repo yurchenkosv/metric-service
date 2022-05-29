@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/yurchenkosv/metric-service/internal/functions"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"github.com/yurchenkosv/metric-service/internal/types"
 	"io"
@@ -20,10 +22,11 @@ func checkMetricType(metricType string, w http.ResponseWriter) {
 	}
 }
 
-func checkForError(err error) {
+func checkForError(err error) bool {
 	if err != nil {
-		panic(err)
+		return true
 	}
+	return false
 }
 
 func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
@@ -33,9 +36,14 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	mapStorage := *store
 
 	body, err := io.ReadAll(request.Body)
-	checkForError(err)
+	if checkForError(err) {
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
+
 	err = json.Unmarshal(body, &metrics)
-	checkForError(err)
+	if checkForError(err) {
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
 
 	metricType := metrics.MType
 	checkMetricType(metricType, writer)
@@ -109,12 +117,16 @@ func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 
 func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metric types.Metric
+	var msg string
+
+	ctx := request.Context()
+	config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
+
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	ctx := request.Context()
 	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 	mapStorage := *store
 
@@ -130,6 +142,7 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 		counter := int64(val)
+		msg = fmt.Sprintf("%s:counter:%d", metric.ID, counter)
 		metric.Delta = &counter
 	}
 	if metric.MType == "gauge" {
@@ -139,7 +152,14 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 		gauge := float64(val)
+		msg = fmt.Sprintf("%s:gauge:%f", metric.ID, gauge)
 		metric.Value = &gauge
+	}
+
+	if config.Key != "" {
+		metric.Hash = functions.CreateSignedHash(msg, []byte(config.Key))
+	} else {
+		metric.Hash = ""
 	}
 
 	data, err = json.Marshal(metric)

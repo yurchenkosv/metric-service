@@ -16,13 +16,14 @@ var (
 )
 
 func init() {
+}
+
+func main() {
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
 	}
-}
 
-func main() {
 	mainLoop := time.NewTicker(cfg.PollInterval)
 	pushLoop := time.NewTicker(cfg.ReportInterval)
 	mainLoopStop := make(chan bool)
@@ -38,9 +39,9 @@ func main() {
 				return
 			case <-mainLoop.C:
 				pollCount = 1
-				functions.CollectMemMetrics(pollCount)
+				functions.CollectMemMetrics(pollCount, &cfg)
 			case <-pushLoop.C:
-				memMetrics <- functions.CollectMemMetrics(pollCount)
+				memMetrics <- functions.CollectMemMetrics(pollCount, &cfg)
 			}
 		}
 	}()
