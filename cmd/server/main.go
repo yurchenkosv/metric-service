@@ -38,7 +38,7 @@ func main() {
 
 	go func() {
 		<-osSignal
-		if cfg.StoreInterval != 0 {
+		if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 			storeLoopStop <- true
 		}
 		functions.FlushMetricsToDisk(&cfg, mapStorage)
