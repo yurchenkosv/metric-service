@@ -171,11 +171,11 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 func HealthChecks(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
-	if config.DbDsn == "" {
+	if config.DBDsn == "" {
 		writer.WriteHeader(http.StatusNotAcceptable)
 	}
 
-	conn, err := pgx.Connect(context.Background(), config.DbDsn)
+	conn, err := pgx.Connect(context.Background(), config.DBDsn)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		writer.WriteHeader(http.StatusInternalServerError)

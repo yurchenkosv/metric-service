@@ -45,7 +45,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	if cfg.StoreInterval != 0 {
+	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 		storeLoop = time.NewTicker(cfg.StoreInterval)
 		go func() {
 			for {
