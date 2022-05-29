@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/yurchenkosv/metric-service/internal/functions"
+	migration "github.com/yurchenkosv/metric-service/internal/migrate"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"log"
 	"net/http"
@@ -24,6 +25,10 @@ func main() {
 	osSignal := make(chan os.Signal, 1)
 	storeLoopStop := make(chan bool)
 	err := cfg.Parse()
+
+	if cfg.DBDsn != "" {
+		migration.Migrate(cfg.DBDsn)
+	}
 
 	if err != nil {
 		log.Fatal(err)
