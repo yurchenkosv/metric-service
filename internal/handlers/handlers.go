@@ -23,10 +23,7 @@ func checkMetricType(metricType string, w http.ResponseWriter) {
 }
 
 func checkForError(err error) bool {
-	if err != nil {
-		return true
-	}
-	return false
+	return err != nil
 }
 
 func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
