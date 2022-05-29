@@ -36,14 +36,14 @@ func main() {
 
 	go func() {
 		<-osSignal
-		if cfg.StoreInterval != 0 {
+		if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 			storeLoopStop <- true
 		}
 		functions.FlushMetricsToDisk(&cfg, mapStorage)
 		os.Exit(0)
 	}()
 
-	if cfg.StoreInterval != 0 {
+	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 		storeLoop = time.NewTicker(cfg.StoreInterval)
 		go func() {
 			for {

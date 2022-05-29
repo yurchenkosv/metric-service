@@ -36,6 +36,7 @@ type ServerConfig struct {
 	StoreFile     string        `env:"STORE_FILE"`
 	Restore       bool          `env:"RESTORE"`
 	Key           string        `env:"KEY"`
+	DBDsn         string        `env:"DATABASE_DSN"`
 }
 
 func (c *AgentConfig) Parse() error {
@@ -55,9 +56,14 @@ func (c *ServerConfig) Parse() error {
 	flag.StringVar(&c.StoreFile, "f", "/tmp/devops-metrics-db.json", "path to file where metrics are stored. Inactive for agent.")
 	flag.BoolVar(&c.Restore, "r", true, "If set to true, read file in -f flag to restore metrics state")
 	flag.StringVar(&c.Key, "k", "", "key to create/validate hash")
+	flag.StringVar(&c.DBDsn, "d", "", "")
 	flag.Parse()
 
 	err := env.Parse(c)
+	if c.DBDsn != "" {
+		c.StoreFile = ""
+		c.Restore = false
+	}
 	return err
 }
 

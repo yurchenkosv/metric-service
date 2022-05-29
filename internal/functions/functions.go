@@ -130,6 +130,10 @@ func PushMemMetrics(m types.Metrics, cfg *types.AgentConfig) {
 }
 
 func FlushMetricsToDisk(cfg *types.ServerConfig, m storage.Repository) {
+	if cfg.StoreFile == "" {
+		return
+	}
+
 	fileLocation := cfg.StoreFile
 	fileBits := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 
@@ -194,6 +198,6 @@ func Cleanup(mainLoop *time.Ticker, pushLoop *time.Ticker, mainLoopStop chan boo
 func CreateSignedHash(msg string, key []byte) string {
 	h := hmac.New(sha256.New, key)
 	h.Write([]byte(msg))
-	dst := hex.EncodeToString(h.Sum(nil))
-	return dst
+	hash := hex.EncodeToString(h.Sum(nil))
+	return hash
 }
