@@ -132,6 +132,7 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 
 	data, err := io.ReadAll(request.Body)
 	checkForError(err)
+	fmt.Println(string(data))
 	err = json.Unmarshal(data, &metric)
 	checkForError(err)
 

@@ -62,6 +62,7 @@ func (c *ServerConfig) Parse() error {
 	err := env.Parse(c)
 	if c.DBDsn != "" {
 		c.StoreFile = ""
+		c.Restore = false
 	}
 	return err
 }
