@@ -56,7 +56,7 @@ func (c *ServerConfig) Parse() error {
 	flag.StringVar(&c.StoreFile, "f", "/tmp/devops-metrics-db.json", "path to file where metrics are stored. Inactive for agent.")
 	flag.BoolVar(&c.Restore, "r", true, "If set to true, read file in -f flag to restore metrics state")
 	flag.StringVar(&c.Key, "k", "", "key to create/validate hash")
-	flag.StringVar(&c.DBDsn, "d", "", "")
+	flag.StringVar(&c.DBDsn, "d", "", "Postgres connection string")
 	flag.Parse()
 
 	err := env.Parse(c)

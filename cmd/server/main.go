@@ -25,14 +25,14 @@ func main() {
 	osSignal := make(chan os.Signal, 1)
 	storeLoopStop := make(chan bool)
 	err := cfg.Parse()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if cfg.DBDsn != "" {
 		migration.Migrate(cfg.DBDsn)
 	}
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	if cfg.Restore {
 		mapStorage = functions.ReadMetricsFromDisk(&cfg, &mapStorage)
 	}

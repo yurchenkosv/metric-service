@@ -9,10 +9,9 @@ import (
 )
 
 func Migrate(dbConnetion string) {
-	connectionWithoutSSL := dbConnetion + "?sslmode=disable"
 	m, err := migrate.New(
 		"file://db/migrations",
-		connectionWithoutSSL)
+		dbConnetion)
 	if err != nil {
 		log.Fatal(err)
 	}
