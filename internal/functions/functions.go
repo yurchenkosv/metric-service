@@ -130,6 +130,10 @@ func PushMemMetrics(m types.Metrics, cfg *types.AgentConfig) {
 }
 
 func FlushMetricsToDisk(cfg *types.ServerConfig, m storage.Repository) {
+	if cfg.StoreFile == "" {
+		return
+	}
+
 	fileLocation := cfg.StoreFile
 	fileBits := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
 

@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v4"
 	"github.com/yurchenkosv/metric-service/internal/functions"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"github.com/yurchenkosv/metric-service/internal/types"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 )
@@ -163,4 +166,19 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	checkForError(err)
 	writer.Header().Add("Content-Type", "application/json")
 	writer.Write(data)
+}
+
+func HealthChecks(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
+	if config.DbDsn == "" {
+		writer.WriteHeader(http.StatusNotAcceptable)
+	}
+
+	conn, err := pgx.Connect(context.Background(), config.DbDsn)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
+	defer conn.Close(context.Background())
 }

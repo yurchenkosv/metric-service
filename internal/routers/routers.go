@@ -31,5 +31,8 @@ func NewRouter(cfg *types.ServerConfig, store *storage.Repository) chi.Router {
 		r.Post("/", handlers.HandleGetMetricJSON)
 		r.Get("/{metricType}/{metricName}", handlers.HandleGetMetric)
 	})
+	router.Route("/ping", func(r chi.Router) {
+		r.Get("/", handlers.HealthChecks)
+	})
 	return router
 }

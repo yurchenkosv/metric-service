@@ -29,7 +29,9 @@ func main() {
 		log.Fatal(err)
 	}
 	if cfg.Restore {
-		mapStorage = functions.ReadMetricsFromDisk(&cfg, &mapStorage)
+		if cfg.StoreFile != "" {
+			mapStorage = functions.ReadMetricsFromDisk(&cfg, &mapStorage)
+		}
 	}
 
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
