@@ -86,3 +86,7 @@ func (m *mapStorage) AsMetrics() types.Metrics {
 	}
 	return metrics
 }
+
+func (m *mapStorage) InsertMetrics([]types.Metric) {
+	return
+}

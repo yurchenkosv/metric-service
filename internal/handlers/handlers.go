@@ -59,6 +59,23 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func HandleUpdatesJson(writer http.ResponseWriter, request *http.Request) {
+	if request.Header.Get("Content-Type") != "application/json" {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var metrics []types.Metric
+	ctx := request.Context()
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
+	storage := *store
+
+	data, err := io.ReadAll(request.Body)
+	checkForError(err)
+	err = json.Unmarshal(data, &metrics)
+	checkForError(err)
+	storage.InsertMetrics(metrics)
+}
+
 func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 
 	ctx := request.Context()
@@ -132,7 +149,6 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 
 	data, err := io.ReadAll(request.Body)
 	checkForError(err)
-	fmt.Println(string(data))
 	err = json.Unmarshal(data, &metric)
 	checkForError(err)
 
