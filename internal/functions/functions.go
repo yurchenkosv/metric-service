@@ -114,19 +114,17 @@ func PushMemMetrics(m types.Metrics, cfg *types.AgentConfig) {
 		SetRetryWaitTime(2 * time.Second).
 		SetRetryMaxWaitTime(5 * time.Second).
 		SetBaseURL("http://" + cfg.Address)
-
-	for i := range m.Metric {
-		metric := m.Metric[i]
-		go func() {
+	go func() {
+		if len(m.Metric) > 0 {
 			_, err := client.R().
 				SetHeader("Content-Type", "application/json").
-				SetBody(metric).
-				Post("/update")
+				SetBody(m.Metric).
+				Post("/updates")
 			if err != nil {
 				log.Panic(err)
 			}
-		}()
-	}
+		}
+	}()
 }
 
 func FlushMetricsToDisk(cfg *types.ServerConfig, m storage.Repository) {

@@ -207,3 +207,47 @@ func (p *PostgresStorage) AsMetrics() types.Metrics {
 	}
 	return metrics
 }
+
+func (p *PostgresStorage) InsertMetrics(metrics []types.Metric) {
+	conn, err := pgx.Connect(context.Background(), p.Conn)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+	}
+	defer conn.Close(context.Background())
+	tx, err := conn.Begin(context.Background())
+	if err != nil {
+		log.Println(err)
+	}
+	for i := range metrics {
+		query := `
+		INSERT INTO metrics(
+			metric_id,
+			metric_type,
+			metric_delta,
+			metric_value,
+			hash
+		)
+		VALUES($1, $2, $3, $4, $5)
+		ON CONFLICT (metric_id) DO UPDATE
+		SET metric_delta=metrics.metric_delta+$3,
+			metric_value=$4,
+			hash=$5;
+		`
+		_, err = tx.Exec(context.Background(),
+			query,
+			metrics[i].ID,
+			metrics[i].MType,
+			metrics[i].Delta,
+			metrics[i].Value,
+			metrics[i].Hash,
+		)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		log.Println(err)
+		tx.Rollback(context.Background())
+	}
+}

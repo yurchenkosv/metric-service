@@ -86,3 +86,16 @@ func (m *mapStorage) AsMetrics() types.Metrics {
 	}
 	return metrics
 }
+
+func (m *mapStorage) InsertMetrics(metrics []types.Metric) {
+	for i := range metrics {
+		if metrics[i].MType == "counter" {
+			counter := *metrics[i].Delta
+			m.AddCounter(metrics[i].ID, types.Counter(counter))
+		}
+		if metrics[i].MType == "gauge" {
+			gauge := *metrics[i].Value
+			m.AddGauge(metrics[i].ID, types.Gauge(gauge))
+		}
+	}
+}

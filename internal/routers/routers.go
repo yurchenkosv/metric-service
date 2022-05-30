@@ -34,5 +34,8 @@ func NewRouter(cfg *types.ServerConfig, store *storage.Repository) chi.Router {
 	router.Route("/ping", func(r chi.Router) {
 		r.Get("/", handlers.HealthChecks)
 	})
+	router.Route("/updates", func(r chi.Router) {
+		r.Post("/", handlers.HandleUpdatesJSON)
+	})
 	return router
 }
