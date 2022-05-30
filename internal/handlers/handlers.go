@@ -9,6 +9,7 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"github.com/yurchenkosv/metric-service/internal/types"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -149,6 +150,7 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 		val, err := mapStorage.GetGaugeByKey(metric.ID)
 		if err != nil {
 			writer.WriteHeader(http.StatusNotFound)
+			log.Println(err)
 			return
 		}
 		gauge := float64(val)

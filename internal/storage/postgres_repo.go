@@ -62,7 +62,7 @@ func (p *PostgresStorage) AddGauge(name string, gauge types.Gauge) {
 		ON CONFLICT (metric_id) DO UPDATE
 		SET metric_value=$3;
 	`
-	_, err = conn.Exec(context.Background(), query, name, "counter", float64(gauge))
+	_, err = conn.Exec(context.Background(), query, name, "gauge", float64(gauge))
 	if err != nil {
 		log.Println(err)
 	}
@@ -126,7 +126,7 @@ func (p *PostgresStorage) GetGaugeByKey(name string) (types.Gauge, error) {
 	}
 	defer conn.Close(context.Background())
 
-	query := "SELECT metric_value FROM metric WHERE metric_id=$1"
+	query := "SELECT metric_value FROM metrics WHERE metric_id=$1"
 
 	result, err := conn.Query(context.Background(), query, name)
 	defer result.Close()
