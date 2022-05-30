@@ -59,7 +59,7 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func HandleUpdatesJson(writer http.ResponseWriter, request *http.Request) {
+func HandleUpdatesJSON(writer http.ResponseWriter, request *http.Request) {
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
 		return

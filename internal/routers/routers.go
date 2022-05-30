@@ -35,7 +35,7 @@ func NewRouter(cfg *types.ServerConfig, store *storage.Repository) chi.Router {
 		r.Get("/", handlers.HealthChecks)
 	})
 	router.Route("/updates", func(r chi.Router) {
-		r.Post("/", handlers.HandleUpdatesJson)
+		r.Post("/", handlers.HandleUpdatesJSON)
 	})
 	return router
 }
