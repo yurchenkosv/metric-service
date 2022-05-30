@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	cfg       = types.ServerConfig{}
-	storeLoop *time.Ticker
+	cfg        = types.ServerConfig{}
+	storeLoop  *time.Ticker
+	mapStorage storage.Repository
 )
 
 func main() {
@@ -28,10 +29,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var mapStorage = storage.NewPostgresStorage(&cfg)
-
 	if cfg.DBDsn != "" {
 		migration.Migrate(cfg.DBDsn)
+		mapStorage = storage.NewPostgresStorage(&cfg)
+	} else {
+		mapStorage = storage.NewMapStorage()
 	}
 
 	if cfg.Restore {
