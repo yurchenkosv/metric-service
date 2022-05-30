@@ -129,11 +129,10 @@ func (p *PostgresStorage) GetGaugeByKey(name string) (types.Gauge, error) {
 	query := "SELECT metric_value FROM metrics WHERE metric_id=$1"
 
 	result, err := conn.Query(context.Background(), query, name)
-	defer result.Close()
-
 	if err != nil {
 		return 0, err
 	}
+	defer result.Close()
 
 	for result.Next() {
 		result.Scan(&gauge)
@@ -152,11 +151,10 @@ func (p *PostgresStorage) GetAllMetrics() string {
 	query := "SELECT metric_id, metric_delta FROM metrics WHERE metric_type='counter'"
 
 	result, err := conn.Query(context.Background(), query)
-	defer result.Close()
-
 	if err != nil {
 		log.Println(err)
 	}
+	defer result.Close()
 
 	for result.Next() {
 		var value, key string
@@ -166,11 +164,10 @@ func (p *PostgresStorage) GetAllMetrics() string {
 
 	query = "SELECT metric_id, metric_value FROM metrics WHERE metric_type='gauge'"
 	result, err = conn.Query(context.Background(), query)
-	defer result.Close()
-
 	if err != nil {
 		log.Println(err)
 	}
+	defer result.Close()
 
 	for result.Next() {
 		var value, key string
