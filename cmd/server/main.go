@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/yurchenkosv/metric-service/internal/functions"
+	migration "github.com/yurchenkosv/metric-service/internal/migrate"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"log"
 	"net/http"
@@ -16,18 +17,25 @@ import (
 
 var (
 	cfg        = types.ServerConfig{}
-	mapStorage = storage.NewMapStorage()
 	storeLoop  *time.Ticker
+	mapStorage storage.Repository
 )
 
 func main() {
 	osSignal := make(chan os.Signal, 1)
 	storeLoopStop := make(chan bool)
 	err := cfg.Parse()
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if cfg.DBDsn != "" {
+		migration.Migrate(cfg.DBDsn)
+		mapStorage = storage.NewPostgresStorage(&cfg)
+	} else {
+		mapStorage = storage.NewMapStorage()
+	}
+
 	if cfg.Restore {
 		mapStorage = functions.ReadMetricsFromDisk(&cfg, &mapStorage)
 	}
