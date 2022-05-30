@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
@@ -177,10 +176,10 @@ func HealthChecks(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	conn, err := pgx.Connect(context.Background(), config.DBDsn)
+	conn, err := pgx.Connect(ctx, config.DBDsn)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
-	defer conn.Close(context.Background())
+	defer conn.Close(ctx)
 }

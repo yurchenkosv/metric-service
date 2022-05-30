@@ -8,10 +8,10 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func Migrate(dbConnetion string) {
+func Migrate(dbConnection string) {
 	m, err := migrate.New(
 		"file://db/migrations",
-		dbConnetion)
+		dbConnection)
 	if err != nil {
 		log.Fatal(err)
 	}
