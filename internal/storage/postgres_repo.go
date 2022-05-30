@@ -187,19 +187,18 @@ func (p *PostgresStorage) AsMetrics() types.Metrics {
 	query := "SELECT metric_id, metric_type, metric_delta, metric_value, hash FROM metrics"
 
 	result, err := conn.Query(context.Background(), query)
-	defer result.Close()
-
 	if err != nil {
 		log.Println(err)
 	}
+	defer result.Close()
 
 	for result.Next() {
-		var metricId, metricType, hash string
+		var metricID, metricType, hash string
 		var metricDelta *int64
 		var metricValue *float64
-		result.Scan(&metricId, &metricType, &metricDelta, &metricValue, &hash)
+		result.Scan(&metricID, &metricType, &metricDelta, &metricValue, &hash)
 		metrics.Metric = append(metrics.Metric, types.Metric{
-			ID:    metricId,
+			ID:    metricID,
 			MType: metricType,
 			Delta: metricDelta,
 			Value: metricValue,
