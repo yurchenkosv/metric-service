@@ -1,10 +1,10 @@
 package main
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/metric-service/internal/functions"
 	migration "github.com/yurchenkosv/metric-service/internal/migrate"
 	"github.com/yurchenkosv/metric-service/internal/storage"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -21,13 +21,23 @@ var (
 	mapStorage storage.Repository
 )
 
+func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+}
+
 func main() {
 	osSignal := make(chan os.Signal, 1)
 	storeLoopStop := make(chan bool)
 	err := cfg.Parse()
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
+
+	log.WithFields(
+		log.Fields{
+			"address": cfg.Address,
+		}).Info("Starting metric agent")
 
 	if cfg.DBDsn != "" {
 		migration.Migrate(cfg.DBDsn)
