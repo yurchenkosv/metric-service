@@ -16,29 +16,9 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/yurchenkosv/metric-service/internal/types"
 )
-
-//type metricConstraint interface {
-//	*types.Counter | *types.Gauge
-//}
-
-//func appendMetric[T metricConstraint](name string, value T, mType string, metrics *types.Metrics) {
-//	metric := types.Metric{
-//		ID:    name,
-//		MType: mType,
-//	}
-//	switch mType {
-//	case "gauge":
-//		metric.Value = types.Gauge(value)
-//	case "counter":
-//		append(metrics.Metric, types.Metric{
-//			ID:    name,
-//			MType: mType,
-//			Delta: types.Counter(value),
-//		})
-//
-//}
 
 var mutex sync.Mutex
 
@@ -75,6 +55,8 @@ func appendCounterMetric(name string, value int64, metrics *types.Metrics, cfg *
 func CollectMemMetrics(poolCount int, cfg *types.AgentConfig) types.Metrics {
 	var rtm runtime.MemStats
 	var memoryMetrics types.Metrics
+	gopMetrics, _ := mem.VirtualMemory()
+
 	runtime.ReadMemStats(&rtm)
 	appendGaugeMetric("Alloc", float64(rtm.Alloc), &memoryMetrics, cfg)
 	appendGaugeMetric("BuckHashSys", float64(rtm.BuckHashSys), &memoryMetrics, cfg)
@@ -104,6 +86,8 @@ func CollectMemMetrics(poolCount int, cfg *types.AgentConfig) types.Metrics {
 	appendGaugeMetric("Sys", float64(rtm.Sys), &memoryMetrics, cfg)
 	appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc), &memoryMetrics, cfg)
 	appendGaugeMetric("RandomValue", rand.Float64(), &memoryMetrics, cfg)
+	appendGaugeMetric("TotalMemory", float64(gopMetrics.Total), &memoryMetrics, cfg)
+	appendGaugeMetric("FreeMemory", float64(gopMetrics.Free), &memoryMetrics, cfg)
 	appendCounterMetric("PollCount", int64(poolCount), &memoryMetrics, cfg)
 	return memoryMetrics
 }
