@@ -2,11 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v4"
+	"github.com/yurchenkosv/metric-service/internal/functions"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"github.com/yurchenkosv/metric-service/internal/types"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 )
@@ -20,10 +25,8 @@ func checkMetricType(metricType string, w http.ResponseWriter) {
 	}
 }
 
-func checkForError(err error) {
-	if err != nil {
-		panic(err)
-	}
+func checkForError(err error) bool {
+	return err != nil
 }
 
 func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
@@ -33,9 +36,14 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	mapStorage := *store
 
 	body, err := io.ReadAll(request.Body)
-	checkForError(err)
+	if checkForError(err) {
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
+
 	err = json.Unmarshal(body, &metrics)
-	checkForError(err)
+	if checkForError(err) {
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
 
 	metricType := metrics.MType
 	checkMetricType(metricType, writer)
@@ -49,6 +57,23 @@ func HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 		gauge := types.Gauge(*metrics.Value)
 		mapStorage.AddGauge(metrics.ID, gauge)
 	}
+}
+
+func HandleUpdatesJSON(writer http.ResponseWriter, request *http.Request) {
+	if request.Header.Get("Content-Type") != "application/json" {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var metrics []types.Metric
+	ctx := request.Context()
+	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
+	storage := *store
+
+	data, err := io.ReadAll(request.Body)
+	checkForError(err)
+	err = json.Unmarshal(data, &metrics)
+	checkForError(err)
+	storage.InsertMetrics(metrics)
 }
 
 func HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
@@ -109,12 +134,16 @@ func HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 
 func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metric types.Metric
+	var msg string
+
+	ctx := request.Context()
+	config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
+
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	ctx := request.Context()
 	store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
 	mapStorage := *store
 
@@ -130,20 +159,45 @@ func HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 		counter := int64(val)
+		msg = fmt.Sprintf("%s:counter:%d", metric.ID, counter)
 		metric.Delta = &counter
 	}
 	if metric.MType == "gauge" {
 		val, err := mapStorage.GetGaugeByKey(metric.ID)
 		if err != nil {
 			writer.WriteHeader(http.StatusNotFound)
+			log.Println(err)
 			return
 		}
 		gauge := float64(val)
+		msg = fmt.Sprintf("%s:gauge:%f", metric.ID, gauge)
 		metric.Value = &gauge
+	}
+
+	if config.Key != "" {
+		metric.Hash = functions.CreateSignedHash(msg, []byte(config.Key))
+	} else {
+		metric.Hash = ""
 	}
 
 	data, err = json.Marshal(metric)
 	checkForError(err)
 	writer.Header().Add("Content-Type", "application/json")
 	writer.Write(data)
+}
+
+func HealthChecks(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
+	if config.DBDsn == "" {
+		writer.WriteHeader(http.StatusNotAcceptable)
+		return
+	}
+
+	conn, err := pgx.Connect(ctx, config.DBDsn)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
+	defer conn.Close(ctx)
 }

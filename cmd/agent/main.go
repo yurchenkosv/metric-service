@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,13 +16,21 @@ var (
 )
 
 func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+}
+
+func main() {
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
 	}
-}
+	log.WithFields(
+		log.Fields{
+			"poolInterval": cfg.PollInterval,
+			"address":      cfg.Address,
+		}).Info("Starting metric agent")
 
-func main() {
 	mainLoop := time.NewTicker(cfg.PollInterval)
 	pushLoop := time.NewTicker(cfg.ReportInterval)
 	mainLoopStop := make(chan bool)
@@ -38,9 +46,9 @@ func main() {
 				return
 			case <-mainLoop.C:
 				pollCount = 1
-				functions.CollectMemMetrics(pollCount)
+				functions.CollectMemMetrics(pollCount, &cfg)
 			case <-pushLoop.C:
-				memMetrics <- functions.CollectMemMetrics(pollCount)
+				memMetrics <- functions.CollectMemMetrics(pollCount, &cfg)
 			}
 		}
 	}()

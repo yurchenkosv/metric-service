@@ -17,4 +17,5 @@ type Repository interface {
 	GetGaugeByKey(string) (types.Gauge, error)
 	GetAllMetrics() string
 	AsMetrics() types.Metrics
+	InsertMetrics([]types.Metric)
 }

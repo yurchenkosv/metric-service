@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/hmac"
+	"encoding/json"
+	"fmt"
 	"github.com/yurchenkosv/metric-service/internal/functions"
 	"github.com/yurchenkosv/metric-service/internal/storage"
 	"github.com/yurchenkosv/metric-service/internal/types"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -87,6 +91,43 @@ func GzipCompress(next http.Handler) http.Handler {
 
 		w.Header().Set("Content-Encoding", "gzip")
 		next.ServeHTTP(types.GzipWriter{ResponseWriter: w, Writer: gz}, r)
+	}
+	return http.HandlerFunc(fn)
+}
+
+func CheckHash(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
+
+		if config.Key != "" {
+			var metric types.Metric
+			var msg string
+			data, err := io.ReadAll(r.Body)
+			r.Body = ioutil.NopCloser(bytes.NewReader(data))
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			err = json.Unmarshal(data, &metric)
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			if metric.MType == "counter" {
+				counter := *metric.Delta
+				msg = fmt.Sprintf("%s:counter:%d", metric.ID, counter)
+			} else if metric.MType == "gauge" {
+				gauge := *metric.Value
+				msg = fmt.Sprintf("%s:gauge:%f", metric.ID, gauge)
+			}
+			hash := functions.CreateSignedHash(msg, []byte(config.Key))
+			if !hmac.Equal([]byte(hash), []byte(metric.Hash)) {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
 }
