@@ -23,7 +23,7 @@ func init() {
 func main() {
 	err := cfg.Parse()
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
 	log.WithFields(
 		log.Fields{

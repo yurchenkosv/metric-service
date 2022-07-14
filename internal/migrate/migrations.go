@@ -10,7 +10,7 @@ import (
 
 func Migrate(dbConnection string) {
 	m, err := migrate.New(
-		"file://db/migrations",
+		"file://internal/storage/migrations",
 		dbConnection)
 	if err != nil {
 		log.Fatal(err)
