@@ -38,7 +38,7 @@ func TestCollectMemMetrics(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := CollectMemMetrics(tt.pollCount, &tt.cfg)
+			result := CollectMetrics(tt.pollCount, &tt.cfg)
 			assert.IsType(t, types.Metrics{}, result)
 			assert.NotEmpty(t, result.Metric)
 			assert.Equal(t, len(result.Metric), tt.want.metricsLength)
