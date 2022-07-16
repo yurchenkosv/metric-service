@@ -10,8 +10,7 @@ import (
 func TestCollectMemMetrics(t *testing.T) {
 	pollCount := int64(1)
 	type want struct {
-		metrics       types.Metrics
-		metricsLength int
+		metrics types.Metrics
 	}
 	tests := []struct {
 		name      string
@@ -24,7 +23,6 @@ func TestCollectMemMetrics(t *testing.T) {
 			pollCount: 1,
 			cfg:       types.AgentConfig{},
 			want: want{
-				metricsLength: 29,
 				metrics: types.Metrics{Metric: []types.Metric{
 					{
 						ID:    "PollCount",
@@ -41,7 +39,6 @@ func TestCollectMemMetrics(t *testing.T) {
 			result := CollectMetrics(tt.pollCount, &tt.cfg)
 			assert.IsType(t, types.Metrics{}, result)
 			assert.NotEmpty(t, result.Metric)
-			assert.Equal(t, len(result.Metric), tt.want.metricsLength)
 			assert.Equal(t, int64(tt.pollCount), *result.Metric[28].Delta)
 		})
 	}

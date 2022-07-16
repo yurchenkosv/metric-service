@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	_ "github.com/shirou/gopsutil/v3/cpu"
 	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
