@@ -46,9 +46,9 @@ func main() {
 				return
 			case <-mainLoop.C:
 				pollCount = 1
-				functions.CollectMemMetrics(pollCount, &cfg)
+				functions.CollectMetrics(pollCount, &cfg)
 			case <-pushLoop.C:
-				memMetrics <- functions.CollectMemMetrics(pollCount, &cfg)
+				memMetrics <- functions.CollectMetrics(pollCount, &cfg)
 			}
 		}
 	}()
