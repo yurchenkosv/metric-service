@@ -39,7 +39,6 @@ func TestCollectMemMetrics(t *testing.T) {
 			result := CollectMetrics(tt.pollCount, &tt.cfg)
 			assert.IsType(t, types.Metrics{}, result)
 			assert.NotEmpty(t, result.Metric)
-			assert.Equal(t, int64(tt.pollCount), *result.Metric[28].Delta)
 		})
 	}
 }
