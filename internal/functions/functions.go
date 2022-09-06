@@ -6,19 +6,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/go-resty/resty/v2"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
+	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/metric-service/internal/storage"
+	"github.com/yurchenkosv/metric-service/internal/types"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"os"
 	"runtime"
 	"sync"
 	"time"
-
-	"github.com/go-resty/resty/v2"
-	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
 var mutex sync.Mutex
@@ -100,8 +99,16 @@ func CollectMetrics(poolCount int, cfg *types.AgentConfig) types.Metrics {
 	}()
 
 	go func() {
-		memMetrics, _ := mem.VirtualMemory()
-		cpuUtil, _ := cpu.Percent(0, true)
+		memMetrics, err := mem.VirtualMemory()
+		if err != nil {
+			log.Error("could not get mem metrics")
+		}
+
+		cpuUtil, err := cpu.Percent(0, true)
+		if err != nil {
+			log.Error("could not get cpu metrics")
+		}
+
 		for util := range cpuUtil {
 			metricName := fmt.Sprintf("CPUutilization%d", util+1)
 			appendGaugeMetric(metricName, cpuUtil[util], &memoryMetrics, cfg)

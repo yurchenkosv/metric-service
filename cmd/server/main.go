@@ -31,7 +31,7 @@ func main() {
 	storeLoopStop := make(chan bool)
 	err := cfg.Parse()
 	if err != nil {
-		log.Error(err)
+		log.Fatal(err)
 	}
 
 	log.WithFields(
