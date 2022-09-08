@@ -24,7 +24,7 @@ func (g *Gauge) String() string {
 	if g == nil {
 		return ""
 	}
-	return fmt.Sprintf("%.6f", *g)
+	return fmt.Sprintf("%.3f", *g)
 }
 
 func (c *Counter) String() string {
