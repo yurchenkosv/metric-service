@@ -71,7 +71,7 @@ func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge) error {
 func (repo *PostgresRepo) GetMetricByKey(name string) (*model.Metric, error) {
 	var metric model.Metric
 	query := `
-		SELECT metric_id, metric_type, metric_delta, metric_value, hash 
+		SELECT metric_id, metric_type, metric_delta, metric_value
 		FROM metrics 
 		WHERE metric_id = $1
 		`
@@ -79,8 +79,7 @@ func (repo *PostgresRepo) GetMetricByKey(name string) (*model.Metric, error) {
 		Scan(&metric.ID,
 			&metric.MType,
 			&metric.Delta,
-			&metric.Value,
-			&metric.Hash)
+			&metric.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -100,10 +99,10 @@ func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
 	defer result.Close()
 
 	for result.Next() {
-		var metricID, metricType, hash string
+		var metricID, metricType string
 		var metricDelta *model.Counter
 		var metricValue *model.Gauge
-		err = result.Scan(&metricID, &metricType, &metricDelta, &metricValue, &hash)
+		err = result.Scan(&metricID, &metricType, &metricDelta, &metricValue)
 		if err != nil {
 			continue
 		}
@@ -112,7 +111,6 @@ func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
 			MType: metricType,
 			Delta: metricDelta,
 			Value: metricValue,
-			Hash:  hash,
 		})
 	}
 	return &metrics, nil

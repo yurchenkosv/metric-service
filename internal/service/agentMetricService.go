@@ -106,7 +106,7 @@ func (s *AgentMetricService) appendGaugeMetric(name string, value float64, metri
 
 	hash, err := s.CreateSignedHash(msg)
 	if err != nil {
-		log.Error(err)
+		log.Info(err)
 	}
 	metrics.Metric = append(metrics.Metric, model.Metric{
 		ID:    name,
@@ -125,7 +125,7 @@ func (s *AgentMetricService) appendCounterMetric(name string, value int64, metri
 
 	hash, err := s.CreateSignedHash(msg)
 	if err != nil {
-		log.Error(err)
+		log.Info(err)
 	}
 	metrics.Metric = append(metrics.Metric, model.Metric{
 		ID:    name,
