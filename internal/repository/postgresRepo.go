@@ -126,46 +126,44 @@ func (repo *PostgresRepo) Ping() error {
 	return repo.Conn.Ping()
 }
 
-//func (repo *PostgresRepo) InsertMetrics(metrics []types.Metric) {
-//	conn, err := pgx.Connect(context.Background(), repo.Conn)
-//	if err != nil {
-//		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-//	}
-//	defer conn.Close(context.Background())
-//	tx, err := conn.Begin(context.Background())
-//	if err != nil {
-//		log.Println(err)
-//	}
-//	for i := range metrics {
-//		query := `
-//		INSERT INTO metrics(
-//			metric_id,
-//			metric_type,
-//			metric_delta,
-//			metric_value,
-//			hash
-//		)
-//		VALUES($1, $2, $3, $4, $5)
-//		ON CONFLICT (metric_id) DO UPDATE
-//		SET metric_delta=metrics.metric_delta+$3,
-//			metric_value=$4,
-//			hash=$5;
-//		`
-//		_, err = tx.Exec(context.Background(),
-//			query,
-//			metrics[i].ID,
-//			metrics[i].MType,
-//			metrics[i].Delta,
-//			metrics[i].Value,
-//			metrics[i].Hash,
-//		)
-//		if err != nil {
-//			log.Println(err)
-//		}
-//	}
-//	err = tx.Commit(context.Background())
-//	if err != nil {
-//		log.Println(err)
-//		tx.Rollback(context.Background())
-//	}
-//}
+func (repo *PostgresRepo) SaveMetricsBatch(metrics []model.Metric) error {
+
+	tx, err := repo.Conn.Begin()
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+	for i := range metrics {
+		query := `
+		INSERT INTO metrics(
+			metric_id,
+			metric_type,
+			metric_delta,
+			metric_value,
+			hash
+		)
+		VALUES($1, $2, $3, $4, $5)
+		ON CONFLICT (metric_id) DO UPDATE
+		SET metric_delta=metrics.metric_delta+$3,
+			metric_value=$4,
+			hash=$5;
+		`
+		_, err = tx.Exec(
+			query,
+			metrics[i].ID,
+			metrics[i].MType,
+			metrics[i].Delta,
+			metrics[i].Value,
+			metrics[i].Hash,
+		)
+		if err != nil {
+			log.Error(err)
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Error(err)
+		return tx.Rollback()
+	}
+	return nil
+}

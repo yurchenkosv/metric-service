@@ -10,6 +10,7 @@ type Repository interface {
 	GetMetricByKey(string) (*model.Metric, error)
 	//GetCounterByKey(string) (model.Counter, error)
 	//GetGaugeByKey(string) (model.Gauge, error)
+	SaveMetricsBatch([]model.Metric) error
 	GetAllMetrics() (*model.Metrics, error)
 	Ping() error
 }

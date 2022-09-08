@@ -50,12 +50,13 @@ func (s *ServerMetricService) AddMetric(metric model.Metric) error {
 
 func (s *ServerMetricService) AddMetricBatch(metrics model.Metrics) error {
 	var err error
-	for _, m := range metrics.Metric {
-		err = s.AddMetric(m)
-		if err != nil {
-			log.Error("cannot save metric ", err)
-		}
+
+	err = s.repo.SaveMetricsBatch(metrics.Metric)
+	if err != nil {
+		log.Error(err)
+		return err
 	}
+
 	err = s.SaveMetricsToDisk()
 	if err != nil {
 		log.Error(err)

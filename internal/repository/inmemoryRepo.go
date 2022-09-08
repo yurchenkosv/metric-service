@@ -1,6 +1,7 @@
 package repository
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/metric-service/internal/errors"
 	"github.com/yurchenkosv/metric-service/internal/model"
 )
@@ -75,36 +76,24 @@ func (m *mapStorage) Ping() error {
 	return nil
 }
 
-//func (m *mapStorage) AsMetrics() types.Metrics {
-//	var metrics types.Metrics
-//	for k, v := range m.CounterMetric {
-//		counter := int64(v)
-//		metrics.Metric = append(metrics.Metric, types.Metric{
-//			ID:    k,
-//			MType: "counter",
-//			Delta: &counter,
-//		})
-//	}
-//	for k, v := range m.GaugeMetric {
-//		gauge := float64(v)
-//		metrics.Metric = append(metrics.Metric, types.Metric{
-//			ID:    k,
-//			MType: "gauge",
-//			Value: &gauge,
-//		})
-//	}
-//	return metrics
-//}
-
-//func (m *mapStorage) InsertMetrics(metrics []types.Metric) {
-//	for i := range metrics {
-//		if metrics[i].MType == "counter" {
-//			counter := *metrics[i].Delta
-//			m.AddCounter(metrics[i].ID, types.Counter(counter))
-//		}
-//		if metrics[i].MType == "gauge" {
-//			gauge := *metrics[i].Value
-//			m.AddGauge(metrics[i].ID, types.Gauge(gauge))
-//		}
-//	}
-//}
+func (m *mapStorage) SaveMetricsBatch(metrics []model.Metric) error {
+	for i := range metrics {
+		if metrics[i].MType == "counter" {
+			counter := *metrics[i].Delta
+			err := m.SaveCounter(metrics[i].ID, counter)
+			if err != nil {
+				log.Error(err)
+				return err
+			}
+		}
+		if metrics[i].MType == "gauge" {
+			gauge := *metrics[i].Value
+			err := m.SaveGauge(metrics[i].ID, gauge)
+			if err != nil {
+				log.Error(err)
+				return err
+			}
+		}
+	}
+	return nil
+}
