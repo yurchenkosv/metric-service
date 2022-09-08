@@ -21,10 +21,16 @@ type Metric struct {
 }
 
 func (g *Gauge) String() string {
+	if g == nil {
+		return ""
+	}
 	return fmt.Sprintf("%.3f", *g)
 }
 
 func (c *Counter) String() string {
+	if c == nil {
+		return ""
+	}
 	return fmt.Sprintf("%d", *c)
 }
 

@@ -199,7 +199,7 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 			return
 		}
 	}
-
+	log.Warnf("found metric: %v", *foundMetric)
 	switch foundMetric.MType {
 	case "counter":
 		msg = fmt.Sprintf("%s:counter:%s", foundMetric.ID, foundMetric.Delta.String())
