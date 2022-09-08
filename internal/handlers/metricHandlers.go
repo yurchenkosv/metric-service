@@ -202,9 +202,9 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 
 	switch foundMetric.MType {
 	case "counter":
-		msg = fmt.Sprintf("%s:counter:%s", metric.ID, foundMetric.Delta.String())
+		msg = fmt.Sprintf("%s:counter:%s", foundMetric.ID, foundMetric.Delta.String())
 	case "gauge":
-		msg = fmt.Sprintf("%s:gauge:%s", metric.ID, foundMetric.Value.String())
+		msg = fmt.Sprintf("%s:gauge:%s", foundMetric.ID, foundMetric.Value.String())
 	}
 
 	foundMetric.Hash, err = h.metricService.CreateSignedHash(msg)
@@ -212,7 +212,7 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 		log.Info(err)
 	}
 
-	data, err = json.Marshal(metric)
+	data, err = json.Marshal(foundMetric)
 	if err != nil {
 		log.Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)

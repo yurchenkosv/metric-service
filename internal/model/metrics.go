@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Gauge float64
 type Counter int64
@@ -17,7 +20,7 @@ type Metric struct {
 	Hash  string   `json:"hash,omitempty"`  // значение хеш-функции
 }
 
-func (g Gauge) String() string {
+func (g *Gauge) String() string {
 	return fmt.Sprintf("%.3f", g)
 }
 
@@ -46,4 +49,40 @@ func NewCounter(val int64) *Counter {
 func NewGauge(val float64) *Gauge {
 	gval := Gauge(val)
 	return &gval
+}
+
+func (c *Counter) MarshalJSON() ([]byte, error) {
+	str := c.String()
+	return json.Marshal(str)
+}
+
+func (g *Gauge) MarshalJSON() ([]byte, error) {
+	str := g.String()
+	return json.Marshal(str)
+}
+
+func (m *Metric) MarshalJSON() ([]byte, error) {
+	type Alias Metric
+	var (
+		value *float64
+		delta *int64
+	)
+	if m.Value != nil {
+		val := float64(*m.Value)
+		value = &val
+		delta = nil
+	} else if m.Delta != nil {
+		val := int64(*m.Delta)
+		delta = &val
+		value = nil
+	}
+	return json.Marshal(&struct {
+		Delta *int64   `json:"delta,omitempty"`
+		Value *float64 `json:"value,omitempty"`
+		*Alias
+	}{
+		Delta: delta,
+		Value: value,
+		Alias: (*Alias)(m),
+	})
 }
