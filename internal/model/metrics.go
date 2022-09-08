@@ -25,7 +25,7 @@ func (g *Gauge) String() string {
 }
 
 func (c *Counter) String() string {
-	return fmt.Sprintf("%d", c)
+	return fmt.Sprintf("%d", *c)
 }
 
 func (m Metrics) String() string {
