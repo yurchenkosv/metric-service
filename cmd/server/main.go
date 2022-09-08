@@ -62,7 +62,7 @@ func main() {
 		if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 			storeLoopStop <- true
 		}
-		err := metricService.SaveMetricsToDisk()
+		//err := metricService.SaveMetricsToDisk()
 		if err != nil {
 			log.Error("cannot store metrics in file")
 		}
@@ -77,7 +77,7 @@ func main() {
 				case <-storeLoopStop:
 					return
 				case <-storeLoop.C:
-					err := metricService.SaveMetricsToDisk()
+					//err := metricService.SaveMetricsToDisk()
 					if err != nil {
 						log.Error("cannot store metrics in file")
 					}

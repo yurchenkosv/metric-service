@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/metric-service/internal/errors"
@@ -166,7 +167,7 @@ func (h MetricHandler) HandleGetAllMetrics(writer http.ResponseWriter, request *
 
 func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metric model.Metric
-	//var msg string
+	var msg string
 
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
@@ -199,17 +200,17 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 		}
 	}
 
-	//switch foundMetric.MType {
-	//case "counter":
-	//	msg = fmt.Sprintf("%s:counter:%s", foundMetric.ID, foundMetric.Delta.String())
-	//case "gauge":
-	//	msg = fmt.Sprintf("%s:gauge:%s", foundMetric.ID, foundMetric.Value.String())
-	//}
-	//
-	//foundMetric.Hash, err = h.metricService.CreateSignedHash(msg)
-	//if err != nil {
-	//	log.Info(err)
-	//}
+	switch foundMetric.MType {
+	case "counter":
+		msg = fmt.Sprintf("%s:counter:%s", foundMetric.ID, foundMetric.Delta.String())
+	case "gauge":
+		msg = fmt.Sprintf("%s:gauge:%s", foundMetric.ID, foundMetric.Value.String())
+	}
+
+	foundMetric.Hash, err = h.metricService.CreateSignedHash(msg)
+	if err != nil {
+		log.Info(err)
+	}
 
 	data, err = json.Marshal(foundMetric)
 	if err != nil {
