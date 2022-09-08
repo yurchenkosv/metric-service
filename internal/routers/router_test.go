@@ -1,8 +1,8 @@
 package routers
 
 import (
-	"github.com/yurchenkosv/metric-service/internal/storage"
-	"github.com/yurchenkosv/metric-service/internal/types"
+	"github.com/yurchenkosv/metric-service/internal/config"
+	"github.com/yurchenkosv/metric-service/internal/repository"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -123,14 +123,14 @@ func TestRouter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := types.ServerConfig{
+			cfg := config.ServerConfig{
 				Address:       "localhost:8080",
 				StoreInterval: 300 * time.Second,
 				StoreFile:     "/tmp/data.json",
 				Restore:       false,
 			}
-			store := storage.NewMapStorage()
-			r := NewRouter(&cfg, &store)
+			store := repository.NewMapStorage()
+			r := NewRouter(&cfg, store)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
 

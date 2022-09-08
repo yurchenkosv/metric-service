@@ -2,17 +2,18 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
+	"github.com/yurchenkosv/metric-service/internal/clients"
+	"github.com/yurchenkosv/metric-service/internal/config"
+	"github.com/yurchenkosv/metric-service/internal/model"
+	"github.com/yurchenkosv/metric-service/internal/service"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/yurchenkosv/metric-service/internal/functions"
-	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
 var (
-	cfg = types.AgentConfig{}
+	cfg = config.AgentConfig{}
 )
 
 func init() {
@@ -31,10 +32,13 @@ func main() {
 			"address":      cfg.Address,
 		}).Info("Starting metric agent")
 
+	agentService := service.NewAgentMetricService(&cfg)
+	metricServerClient := clients.NewMetricServerClient(cfg.Address)
+
 	mainLoop := time.NewTicker(cfg.PollInterval)
 	pushLoop := time.NewTicker(cfg.ReportInterval)
 	mainLoopStop := make(chan bool)
-	memMetrics := make(chan types.Metrics)
+	memMetrics := make(chan model.Metrics)
 	osSignal := make(chan os.Signal, 3)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
@@ -46,20 +50,20 @@ func main() {
 				return
 			case <-mainLoop.C:
 				pollCount = 1
-				functions.CollectMetrics(pollCount, &cfg)
+				agentService.CollectMetrics(pollCount)
 			case <-pushLoop.C:
-				memMetrics <- functions.CollectMetrics(pollCount, &cfg)
+				memMetrics <- agentService.CollectMetrics(pollCount)
 			}
 		}
 	}()
 
 	go func() {
 		for {
-			functions.PushMemMetrics(<-memMetrics, &cfg)
+			metricServerClient.PushMetrics(<-memMetrics)
 		}
 	}()
 
 	<-osSignal
-	functions.Cleanup(mainLoop, pushLoop, mainLoopStop)
-	os.Exit(0)
+	Cleanup(mainLoop, pushLoop, mainLoopStop)
+
 }
