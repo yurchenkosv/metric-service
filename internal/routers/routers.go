@@ -27,8 +27,8 @@ func NewRouter(cfg *config.ServerConfig, store repository.Repository) chi.Router
 	router.Use(middlewares.GzipCompress)
 	router.Use(middlewares.GzipDecompress)
 
-	router.With(middlewares.CheckHash(metricService)).Route("/update", func(r chi.Router) {
-		r.Post("/", metricHandler.HandleUpdateMetricJSON)
+	router.Route("/update", func(r chi.Router) {
+		r.With(middlewares.CheckHash(metricService)).Post("/", metricHandler.HandleUpdateMetricJSON)
 		r.Post("/{metricType}/{metricName}/{metricValue}", metricHandler.HandleUpdateMetric)
 	})
 	router.Route("/", func(r chi.Router) {
