@@ -50,13 +50,15 @@ func (h MetricHandler) HandleUpdateMetricJSON(writer http.ResponseWriter, reques
 	}
 
 	err = h.metricService.AddMetric(metric)
-	switch e := err.(type) {
-	case *errors.NoSuchMetricError:
-		writer.WriteHeader(http.StatusNotImplemented)
-	default:
-		log.Error("unknown error when add metric ", e)
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
+	if err != nil {
+		switch e := err.(type) {
+		case *errors.NoSuchMetricError:
+			writer.WriteHeader(http.StatusNotImplemented)
+		default:
+			log.Error("unknown error when add metric ", e)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 }
 

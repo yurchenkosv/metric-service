@@ -30,9 +30,9 @@ func (m Metrics) String() string {
 	for _, v := range m.Metric {
 		switch v.MType {
 		case "counter":
-			result = result + fmt.Sprintf("%s = %d\n", v.ID, v.Delta)
+			result = result + fmt.Sprintf("%s = %s\n", v.ID, v.Delta.String())
 		case "gauge":
-			result = result + fmt.Sprintf("%s = %.2f\n", v.ID, v.Value)
+			result = result + fmt.Sprintf("%s = %s\n", v.ID, v.Value.String())
 		}
 	}
 	return result

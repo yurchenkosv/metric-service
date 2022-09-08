@@ -96,6 +96,12 @@ func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
 		log.Error(err)
 		return nil, err
 	}
+
+	err = result.Err()
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
 	defer result.Close()
 
 	for result.Next() {
