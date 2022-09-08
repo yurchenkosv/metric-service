@@ -18,7 +18,7 @@ type Metric struct {
 }
 
 func (g Gauge) String() string {
-	return fmt.Sprintf("%.2f", g)
+	return fmt.Sprintf("%.3f", g)
 }
 
 func (c Counter) String() string {

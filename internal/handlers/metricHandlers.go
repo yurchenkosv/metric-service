@@ -207,7 +207,7 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 
 	foundMetric.Hash, err = h.metricService.CreateSignedHash(msg)
 	if err != nil {
-		log.Error(err)
+		log.Info(err)
 	}
 
 	data, err = json.Marshal(metric)
