@@ -5,21 +5,24 @@ import (
 	"fmt"
 )
 
-type Gauge float64
-type Counter int64
+type Gauge float64 // custom type for Gauge based on float64
+type Counter int64 // custom type for Counter based on int64
 
+// Metrics struct represents set of Metric
 type Metrics struct {
-	Metric []Metric
+	Metric []Metric // slice of Metric
 }
 
+// Metric - struc that represents single metric
 type Metric struct {
-	ID    string   `json:"id"`              // имя метрики
-	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
-	Delta *Counter `json:"delta,omitempty"` // значение метрики в случае передачи counter
-	Value *Gauge   `json:"value,omitempty"` // значение метрики в случае передачи gauge
-	Hash  string   `json:"hash,omitempty"`  // значение хеш-функции
+	ID    string   `json:"id"`              // metric name
+	MType string   `json:"type"`            // parameter, that could be gauge or counter
+	Delta *Counter `json:"delta,omitempty"` // metric value in case of Counter
+	Value *Gauge   `json:"value,omitempty"` // metric value in case of Gauge
+	Hash  string   `json:"hash,omitempty"`  // hash-function value
 }
 
+// String is string representation of Gauge
 func (g *Gauge) String() string {
 	if g == nil {
 		return ""
@@ -27,6 +30,7 @@ func (g *Gauge) String() string {
 	return fmt.Sprintf("%.3f", *g)
 }
 
+// String is string representation of Counter
 func (c *Counter) String() string {
 	if c == nil {
 		return ""
@@ -34,6 +38,8 @@ func (c *Counter) String() string {
 	return fmt.Sprintf("%d", *c)
 }
 
+// String method for string representation of Metrics.
+// Useful when we generate page with all metrics
 func (m Metrics) String() string {
 	var result string
 	for _, v := range m.Metric {
@@ -47,26 +53,32 @@ func (m Metrics) String() string {
 	return result
 }
 
+// NewCounter is function - helper to convert int64 to *Counter
 func NewCounter(val int64) *Counter {
 	cval := Counter(val)
 	return &cval
 }
 
+// NewGauge is function - helper to convert float64 to *Gauge
 func NewGauge(val float64) *Gauge {
 	gval := Gauge(val)
 	return &gval
 }
 
+// MarshalJSON custom marshaller for  Counter type
 func (c *Counter) MarshalJSON() ([]byte, error) {
 	str := c.String()
 	return json.Marshal(str)
 }
 
+// MarshalJSON custom marshaller for Gauge type.
 func (g *Gauge) MarshalJSON() ([]byte, error) {
 	str := g.String()
 	return json.Marshal(str)
 }
 
+// MarshalJSON custom unmarshaller for Metric struct.
+// We need this because of custom types, Counter and Gauge inside Metric.
 func (m *Metric) MarshalJSON() ([]byte, error) {
 	type Alias Metric
 	var (

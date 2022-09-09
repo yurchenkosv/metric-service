@@ -8,6 +8,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+// Migrate function only needs on program start to apply migrations to database.
 func Migrate(dbConnection string) {
 	m, err := migrate.New(
 		"file://internal/repository/migrations",

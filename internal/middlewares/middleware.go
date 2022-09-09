@@ -17,6 +17,8 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
+// GzipDecompress is middleware to decompress message body, that was compressed with Gzip algo.
+// It executes only if Content-Encoding is gzip.
 func GzipDecompress(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
@@ -40,6 +42,8 @@ func GzipDecompress(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// GzipCompress middleware to compress message body with Gzip algo.
+// It executes only if Accept-Encoding is gzip.
 func GzipCompress(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
@@ -59,6 +63,9 @@ func GzipCompress(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// CheckHash middleware to get hash from JSON message and check, that hash is valid.
+// It unmarshalls metric and calculate signed hash.
+// If hash in message and calculated the same - pass message to handler.
 func CheckHash(svc *service.ServerMetricService) func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {

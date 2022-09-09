@@ -26,7 +26,6 @@ func init() {
 }
 
 func main() {
-	poolCount := 1
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
@@ -42,7 +41,7 @@ func main() {
 
 	sched := gocron.NewScheduler(time.UTC)
 	_, err = sched.Every(cfg.PollInterval).
-		Do(agentService.CollectMetrics, &poolCount)
+		Do(agentService.CollectMetrics, 1)
 	if err != nil {
 		log.Fatal("cannot start collect job", err)
 	}
