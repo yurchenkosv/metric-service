@@ -93,6 +93,8 @@ func (h MetricHandler) HandleUpdateMetric(writer http.ResponseWriter, request *h
 	metricName := chi.URLParam(request, "metricName")
 	metricValue := chi.URLParam(request, "metricValue")
 
+	writer.Header().Add("Content-Type", "text/plain")
+
 	metric := model.Metric{
 		ID:    metricName,
 		MType: metricType,
@@ -131,6 +133,9 @@ func (h MetricHandler) HandleUpdateMetric(writer http.ResponseWriter, request *h
 func (h MetricHandler) HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
 	metricType := chi.URLParam(request, "metricType")
 	metricName := chi.URLParam(request, "metricName")
+
+	writer.Header().Add("Content-Type", "text/plain")
+
 	if !validateMetric(metricType) {
 		writer.WriteHeader(http.StatusNotImplemented)
 	}

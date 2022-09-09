@@ -126,10 +126,9 @@ func TestRouter(t *testing.T) {
 			cfg := config.ServerConfig{
 				Address:       "localhost:8080",
 				StoreInterval: 300 * time.Second,
-				StoreFile:     "/tmp/data.json",
 				Restore:       false,
 			}
-			store := repository.NewMapStorage()
+			store := repository.NewMapRepo()
 			r := NewRouter(&cfg, store)
 			ts := httptest.NewServer(r)
 			defer ts.Close()
@@ -139,9 +138,9 @@ func TestRouter(t *testing.T) {
 
 			assert.Equal(t, tt.want.statusCode, resp.StatusCode)
 
-			//for k, v := range tt.want.headers {
-			//	assert.Equal(t, v, resp.Header.Get(k))
-			//}
+			for k, v := range tt.want.headers {
+				assert.Equal(t, v, resp.Header.Get(k))
+			}
 
 		})
 	}

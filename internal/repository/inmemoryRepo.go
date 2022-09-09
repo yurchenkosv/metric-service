@@ -11,7 +11,7 @@ type mapStorage struct {
 	CounterMetric map[string]model.Counter
 }
 
-func NewMapStorage() *mapStorage {
+func NewMapRepo() *mapStorage {
 	return &mapStorage{
 		GaugeMetric:   make(map[string]model.Gauge),
 		CounterMetric: make(map[string]model.Counter),

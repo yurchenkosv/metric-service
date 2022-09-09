@@ -26,6 +26,7 @@ func NewRouter(cfg *config.ServerConfig, store repository.Repository) chi.Router
 	router.Use(middleware.Recoverer)
 	router.Use(middlewares.GzipCompress)
 	router.Use(middlewares.GzipDecompress)
+	router.Use(middleware.AllowContentType("text/plain", "application/json"))
 
 	router.Route("/update", func(r chi.Router) {
 		r.Post("/", metricHandler.HandleUpdateMetricJSON)

@@ -45,7 +45,7 @@ func main() {
 		migration.Migrate(cfg.DBDsn)
 		repo = repository.NewPostgresRepo(cfg.DBDsn)
 	} else {
-		repo = repository.NewMapStorage()
+		repo = repository.NewMapRepo()
 	}
 
 	if cfg.Restore {

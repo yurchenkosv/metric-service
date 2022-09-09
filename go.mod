@@ -7,6 +7,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang-migrate/migrate/v4 v4.15.2
+	github.com/golang/mock v1.6.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/shirou/gopsutil/v3 v3.22.6
 	github.com/sirupsen/logrus v1.8.1
