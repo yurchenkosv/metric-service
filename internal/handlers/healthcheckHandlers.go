@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/service"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
 type HealthChecksHandler struct {

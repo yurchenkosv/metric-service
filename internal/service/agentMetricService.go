@@ -2,16 +2,18 @@ package service
 
 import (
 	"fmt"
+	"math/rand"
+	"runtime"
+	"sync"
+
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	log "github.com/sirupsen/logrus"
+
 	"github.com/yurchenkosv/metric-service/internal/clients"
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/errors"
 	"github.com/yurchenkosv/metric-service/internal/model"
-	"math/rand"
-	"runtime"
-	"sync"
 )
 
 type AgentMetricService struct {

@@ -3,14 +3,16 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/errors"
-	"github.com/yurchenkosv/metric-service/internal/model"
-	"github.com/yurchenkosv/metric-service/internal/service"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/errors"
+	"github.com/yurchenkosv/metric-service/internal/model"
+	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
 type MetricHandler struct {

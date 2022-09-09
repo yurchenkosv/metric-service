@@ -1,10 +1,12 @@
 package clients
 
 import (
+	"time"
+
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+
 	"github.com/yurchenkosv/metric-service/internal/model"
-	"time"
 )
 
 type MetricServerClient struct {

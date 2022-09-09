@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-co-op/gocron"
-	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/clients"
-	"github.com/yurchenkosv/metric-service/internal/config"
-	"github.com/yurchenkosv/metric-service/internal/service"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-co-op/gocron"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/clients"
+	"github.com/yurchenkosv/metric-service/internal/config"
+	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
 var (
