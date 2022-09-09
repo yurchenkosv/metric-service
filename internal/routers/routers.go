@@ -3,39 +3,47 @@ package routers
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/handlers"
 	"github.com/yurchenkosv/metric-service/internal/middlewares"
-	"github.com/yurchenkosv/metric-service/internal/storage"
-	"github.com/yurchenkosv/metric-service/internal/types"
+	"github.com/yurchenkosv/metric-service/internal/repository"
+	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
-func NewRouter(cfg *types.ServerConfig, store *storage.Repository) chi.Router {
+func NewRouter(cfg *config.ServerConfig, store repository.Repository) chi.Router {
+	var (
+		metricService      = service.NewServerMetricService(cfg, store)
+		healthCheckService = service.NewHealthCheckService(cfg, store)
+
+		metricHandler      = handlers.NewMetricHandler(metricService)
+		healthCheckHandler = handlers.NewHealthCheckHandler(healthCheckService)
+	)
+
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.StripSlashes)
 	router.Use(middleware.Recoverer)
-	router.Use(middlewares.AppendConfigToContext(cfg))
-	router.Use(middlewares.AddStorage(store))
 	router.Use(middlewares.GzipCompress)
 	router.Use(middlewares.GzipDecompress)
+	router.Use(middleware.AllowContentType("text/plain", "application/json"))
 
-	router.With(middlewares.SaveMetricToFile).Route("/update", func(r chi.Router) {
-		r.Post("/", handlers.HandleUpdateMetricJSON)
-		r.Post("/{metricType}/{metricName}/{metricValue}", handlers.HandleUpdateMetric)
+	router.Route("/update", func(r chi.Router) {
+		r.Post("/", metricHandler.HandleUpdateMetricJSON)
+		r.Post("/{metricType}/{metricName}/{metricValue}", metricHandler.HandleUpdateMetric)
 	})
 	router.Route("/", func(r chi.Router) {
-		r.Get("/", handlers.HandleGetAllMetrics)
+		r.Get("/", metricHandler.HandleGetAllMetrics)
 	})
 	router.Route("/value", func(r chi.Router) {
-		r.Post("/", handlers.HandleGetMetricJSON)
-		r.Get("/{metricType}/{metricName}", handlers.HandleGetMetric)
+		r.Post("/", metricHandler.HandleGetMetricJSON)
+		r.Get("/{metricType}/{metricName}", metricHandler.HandleGetMetric)
 	})
 	router.Route("/ping", func(r chi.Router) {
-		r.Get("/", handlers.HealthChecks)
+		r.Get("/", healthCheckHandler.HandleHealthChecks)
 	})
 	router.Route("/updates", func(r chi.Router) {
-		r.Post("/", handlers.HandleUpdatesJSON)
+		r.Post("/", metricHandler.HandleUpdatesJSON)
 	})
 	return router
 }

@@ -3,55 +3,17 @@ package middlewares
 import (
 	"bytes"
 	"compress/gzip"
-	"context"
 	"crypto/hmac"
 	"encoding/json"
 	"fmt"
-	"github.com/yurchenkosv/metric-service/internal/functions"
-	"github.com/yurchenkosv/metric-service/internal/storage"
-	"github.com/yurchenkosv/metric-service/internal/types"
+	log "github.com/sirupsen/logrus"
+	"github.com/yurchenkosv/metric-service/internal/model"
+	"github.com/yurchenkosv/metric-service/internal/service"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 )
-
-func AppendConfigToContext(config *types.ServerConfig) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, types.ContextKey("config"), config)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		}
-		return http.HandlerFunc(fn)
-	}
-}
-
-func AddStorage(store *storage.Repository) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, types.ContextKey("storage"), store)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		}
-		return http.HandlerFunc(fn)
-	}
-}
-
-func SaveMetricToFile(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
-		if config.StoreInterval == 0 {
-			store := ctx.Value(types.ContextKey("storage")).(*storage.Repository)
-			mapStorage := *store
-			functions.FlushMetricsToDisk(config, mapStorage)
-		}
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
 
 func GzipDecompress(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -90,18 +52,15 @@ func GzipCompress(next http.Handler) http.Handler {
 		defer gz.Close()
 
 		w.Header().Set("Content-Encoding", "gzip")
-		next.ServeHTTP(types.GzipWriter{ResponseWriter: w, Writer: gz}, r)
+		next.ServeHTTP(model.GzipWriter{ResponseWriter: w, Writer: gz}, r)
 	}
 	return http.HandlerFunc(fn)
 }
 
-func CheckHash(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		config := ctx.Value(types.ContextKey("config")).(*types.ServerConfig)
-
-		if config.Key != "" {
-			var metric types.Metric
+func CheckHash(svc *service.ServerMetricService) func(handler http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			var metric model.Metric
 			var msg string
 			data, err := io.ReadAll(r.Body)
 			r.Body = ioutil.NopCloser(bytes.NewReader(data))
@@ -114,20 +73,23 @@ func CheckHash(next http.Handler) http.Handler {
 				log.Fatal(err)
 				return
 			}
-			if metric.MType == "counter" {
-				counter := *metric.Delta
-				msg = fmt.Sprintf("%s:counter:%d", metric.ID, counter)
-			} else if metric.MType == "gauge" {
-				gauge := *metric.Value
-				msg = fmt.Sprintf("%s:gauge:%f", metric.ID, gauge)
+			switch metric.MType {
+			case "counter":
+				msg = fmt.Sprintf("%s:counter:%s", metric.ID, metric.Delta.String())
+			case "gauge":
+				msg = fmt.Sprintf("%s:gauge:%s", metric.ID, metric.Value.String())
 			}
-			hash := functions.CreateSignedHash(msg, []byte(config.Key))
+			hash, err := svc.CreateSignedHash(msg)
+			if err != nil {
+				log.Error(err)
+				return
+			}
 			if !hmac.Equal([]byte(hash), []byte(metric.Hash)) {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
+			next.ServeHTTP(w, r)
 		}
-		next.ServeHTTP(w, r)
+		return http.HandlerFunc(fn)
 	}
-	return http.HandlerFunc(fn)
 }

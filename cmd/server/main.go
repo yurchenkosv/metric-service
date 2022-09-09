@@ -2,9 +2,10 @@ package main
 
 import (
 	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/functions"
+	"github.com/yurchenkosv/metric-service/internal/config"
 	migration "github.com/yurchenkosv/metric-service/internal/migrate"
-	"github.com/yurchenkosv/metric-service/internal/storage"
+	"github.com/yurchenkosv/metric-service/internal/repository"
+	"github.com/yurchenkosv/metric-service/internal/service"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,18 +13,18 @@ import (
 	"time"
 
 	"github.com/yurchenkosv/metric-service/internal/routers"
-	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
 var (
-	cfg        = types.ServerConfig{}
-	storeLoop  *time.Ticker
-	mapStorage storage.Repository
+	cfg       = config.NewServerConfig()
+	storeLoop *time.Ticker
+	repo      repository.Repository
 )
 
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
+	log.SetLevel(log.WarnLevel)
 }
 
 func main() {
@@ -34,20 +35,24 @@ func main() {
 		log.Fatal(err)
 	}
 
+	metricService := service.NewServerMetricService(cfg, repo)
 	log.WithFields(
 		log.Fields{
 			"address": cfg.Address,
-		}).Info("Starting metric agent")
+		}).Info("Starting metric server")
 
 	if cfg.DBDsn != "" {
 		migration.Migrate(cfg.DBDsn)
-		mapStorage = storage.NewPostgresStorage(&cfg)
+		repo = repository.NewPostgresRepo(cfg.DBDsn)
 	} else {
-		mapStorage = storage.NewMapStorage()
+		repo = repository.NewMapRepo()
 	}
 
 	if cfg.Restore {
-		mapStorage = functions.ReadMetricsFromDisk(&cfg, &mapStorage)
+		err := metricService.LoadMetricsFromDisk()
+		if err != nil {
+			log.Fatal("cannot read metrics from file")
+		}
 	}
 
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
@@ -57,7 +62,10 @@ func main() {
 		if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 			storeLoopStop <- true
 		}
-		functions.FlushMetricsToDisk(&cfg, mapStorage)
+		//err := metricService.SaveMetricsToDisk()
+		if err != nil {
+			log.Error("cannot store metrics in file")
+		}
 		os.Exit(0)
 	}()
 
@@ -69,14 +77,17 @@ func main() {
 				case <-storeLoopStop:
 					return
 				case <-storeLoop.C:
-					functions.FlushMetricsToDisk(&cfg, mapStorage)
+					//err := metricService.SaveMetricsToDisk()
+					if err != nil {
+						log.Error("cannot store metrics in file")
+					}
 				}
 			}
 
 		}()
 	}
 
-	router := routers.NewRouter(&cfg, &mapStorage)
+	router := routers.NewRouter(cfg, repo)
 	server := &http.Server{Addr: cfg.Address, Handler: router}
 	log.Fatal(server.ListenAndServe())
 }

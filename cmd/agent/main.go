@@ -1,26 +1,30 @@
 package main
 
 import (
+	"fmt"
+	"github.com/go-co-op/gocron"
 	log "github.com/sirupsen/logrus"
+	"github.com/yurchenkosv/metric-service/internal/clients"
+	"github.com/yurchenkosv/metric-service/internal/config"
+	"github.com/yurchenkosv/metric-service/internal/service"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/yurchenkosv/metric-service/internal/functions"
-	"github.com/yurchenkosv/metric-service/internal/types"
 )
 
 var (
-	cfg = types.AgentConfig{}
+	cfg = config.AgentConfig{}
 )
 
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
+	log.SetLevel(log.WarnLevel)
 }
 
 func main() {
+	poolCount := 1
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
@@ -31,35 +35,28 @@ func main() {
 			"address":      cfg.Address,
 		}).Info("Starting metric agent")
 
-	mainLoop := time.NewTicker(cfg.PollInterval)
-	pushLoop := time.NewTicker(cfg.ReportInterval)
-	mainLoopStop := make(chan bool)
-	memMetrics := make(chan types.Metrics)
+	metricServerClient := clients.NewMetricServerClient(cfg.Address)
+	agentService := service.NewAgentMetricService(&cfg, metricServerClient)
+
+	sched := gocron.NewScheduler(time.UTC)
+	_, err = sched.Every(cfg.PollInterval).
+		Do(agentService.CollectMetrics, &poolCount)
+	if err != nil {
+		log.Fatal("cannot start collect job", err)
+	}
+
+	_, err = sched.Every(cfg.ReportInterval).
+		Do(agentService.Push)
+	if err != nil {
+		log.Fatal("cannot start report job", err)
+	}
+	sched.StartAsync()
 	osSignal := make(chan os.Signal, 3)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
-	go func() {
-		var pollCount int
-		for {
-			select {
-			case <-mainLoopStop:
-				return
-			case <-mainLoop.C:
-				pollCount = 1
-				functions.CollectMetrics(pollCount, &cfg)
-			case <-pushLoop.C:
-				memMetrics <- functions.CollectMetrics(pollCount, &cfg)
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			functions.PushMemMetrics(<-memMetrics, &cfg)
-		}
-	}()
-
 	<-osSignal
-	functions.Cleanup(mainLoop, pushLoop, mainLoopStop)
+	sched.Stop()
+	fmt.Println("Program exit")
 	os.Exit(0)
+
 }
