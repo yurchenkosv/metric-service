@@ -34,9 +34,9 @@ func (s *AgentMetricService) CreateSignedHash(msg string) (string, error) {
 
 func (s *AgentMetricService) CollectMetrics(poolCount int) model.Metrics {
 	var memoryMetrics model.Metrics
-	var wg sync.WaitGroup
+	//var wg sync.WaitGroup
 
-	wg.Add(2)
+	//wg.Add(2)
 
 	go func() {
 		var rtm runtime.MemStats
@@ -71,7 +71,7 @@ func (s *AgentMetricService) CollectMetrics(poolCount int) model.Metrics {
 		s.appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc), &memoryMetrics)
 		s.appendGaugeMetric("RandomValue", rand.Float64(), &memoryMetrics)
 		s.appendCounterMetric("PollCount", int64(poolCount), &memoryMetrics)
-		wg.Done()
+		//wg.Done()
 	}()
 
 	go func() {
@@ -91,10 +91,10 @@ func (s *AgentMetricService) CollectMetrics(poolCount int) model.Metrics {
 		}
 		s.appendGaugeMetric("TotalMemory", float64(memMetrics.Total), &memoryMetrics)
 		s.appendGaugeMetric("FreeMemory", float64(memMetrics.Free), &memoryMetrics)
-		wg.Done()
+		//wg.Done()
 	}()
 
-	wg.Wait()
+	//wg.Wait()
 	return memoryMetrics
 }
 
