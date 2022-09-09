@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"github.com/go-co-op/gocron"
 	log "github.com/sirupsen/logrus"
 	"github.com/yurchenkosv/metric-service/internal/config"
 	migration "github.com/yurchenkosv/metric-service/internal/migrate"
@@ -16,9 +18,8 @@ import (
 )
 
 var (
-	cfg       = config.NewServerConfig()
-	storeLoop *time.Ticker
-	repo      repository.Repository
+	cfg  = config.NewServerConfig()
+	repo repository.Repository
 )
 
 func init() {
@@ -29,11 +30,12 @@ func init() {
 
 func main() {
 	osSignal := make(chan os.Signal, 1)
-	storeLoopStop := make(chan bool)
+	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
 	}
+	sched := gocron.NewScheduler(time.UTC)
 
 	metricService := service.NewServerMetricService(cfg, repo)
 	log.WithFields(
@@ -55,39 +57,30 @@ func main() {
 		}
 	}
 
-	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
-
-	go func() {
-		<-osSignal
-		if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
-			storeLoopStop <- true
-		}
-		//err := metricService.SaveMetricsToDisk()
-		if err != nil {
-			log.Error("cannot store metrics in file")
-		}
-		os.Exit(0)
-	}()
-
 	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
-		storeLoop = time.NewTicker(cfg.StoreInterval)
-		go func() {
-			for {
-				select {
-				case <-storeLoopStop:
-					return
-				case <-storeLoop.C:
-					//err := metricService.SaveMetricsToDisk()
-					if err != nil {
-						log.Error("cannot store metrics in file")
-					}
-				}
-			}
-
-		}()
+		_, err := sched.Every(cfg.StoreInterval).
+			Do(metricService.SaveMetricsToDisk())
+		if err != nil {
+			log.Error("cannot save metrics to disk", err)
+		}
+		sched.StartAsync()
 	}
 
 	router := routers.NewRouter(cfg, repo)
 	server := &http.Server{Addr: cfg.Address, Handler: router}
-	log.Fatal(server.ListenAndServe())
+	go func(server *http.Server) {
+		log.Fatal(server.ListenAndServe())
+	}(server)
+
+	<-osSignal
+	log.Warn("shuting down server")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	sched.Stop()
+	err = server.Shutdown(ctx)
+	if err != nil {
+		log.Error(err)
+	}
+	metricService.Shutdown()
+	os.Exit(0)
 }
