@@ -5,14 +5,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/model"
-	"sync"
 	"testing"
 )
 
 func TestAgentMetricService_CollectMetrics(t *testing.T) {
 	type fields struct {
 		config *config.AgentConfig
-		mutex  sync.Mutex
 	}
 	type args struct {
 		poolCount int
@@ -27,10 +25,7 @@ func TestAgentMetricService_CollectMetrics(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &AgentMetricService{
-				config: tt.fields.config,
-				mutex:  tt.fields.mutex,
-			}
+			s := NewAgentMetricService(tt.fields.config)
 			assert.Equalf(t, tt.want, s.CollectMetrics(tt.args.poolCount), "CollectMetrics(%v)", tt.args.poolCount)
 		})
 	}
