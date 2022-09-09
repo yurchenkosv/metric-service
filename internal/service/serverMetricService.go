@@ -14,11 +14,13 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/repository"
 )
 
+// ServerMetricService main service to work with metrics on server side
 type ServerMetricService struct {
 	config *config.ServerConfig
 	repo   repository.Repository
 }
 
+// NewServerMetricService creates new ServerMetricService and returns pointer on it.
 func NewServerMetricService(cnf *config.ServerConfig, repo repository.Repository) *ServerMetricService {
 	return &ServerMetricService{
 		config: cnf,
@@ -26,6 +28,8 @@ func NewServerMetricService(cnf *config.ServerConfig, repo repository.Repository
 	}
 }
 
+// Shutdown method saves metrics to disk, if it's required, then call repository Shutdown() method.
+// This method for gracefully shutdown operations before shutting down application
 func (s ServerMetricService) Shutdown() {
 	if s.config.StoreInterval != 0 && s.config.DBDsn == "" {
 		err := s.SaveMetricsToDisk()
@@ -36,6 +40,8 @@ func (s ServerMetricService) Shutdown() {
 	s.repo.Shutdown()
 }
 
+// AddMetric method for saving model.Metric in repository. It can return error if something went wrong.
+// Also, it saves metrics to disk if it is required.
 func (s *ServerMetricService) AddMetric(metric model.Metric) error {
 	switch metric.MType {
 	case "gauge":
@@ -60,6 +66,10 @@ func (s *ServerMetricService) AddMetric(metric model.Metric) error {
 	return nil
 }
 
+// AddMetricBatch method for save slice of model.Metrics to repository.
+// It can return error if it cannot save metrics for some reason.
+// It calls SaveMetricsBatch repository method to save metrics transactional.
+// Also, it saves metrics to disk if it is required.
 func (s *ServerMetricService) AddMetricBatch(metrics model.Metrics) error {
 	var err error
 
@@ -76,6 +86,8 @@ func (s *ServerMetricService) AddMetricBatch(metrics model.Metrics) error {
 	return nil
 }
 
+// GetMetricByKey method to get pointer to model.Metric from repository.
+// If nothing could be found, then MetricNotFoundError returns.
 func (s *ServerMetricService) GetMetricByKey(name string) (*model.Metric, error) {
 	metric, err := s.repo.GetMetricByKey(name)
 	if err != nil {
@@ -84,6 +96,7 @@ func (s *ServerMetricService) GetMetricByKey(name string) (*model.Metric, error)
 	return metric, nil
 }
 
+// GetAllMetrics method to get pointer to model.Metrics with all metrics in repository.
 func (s *ServerMetricService) GetAllMetrics() (*model.Metrics, error) {
 	metrics, err := s.repo.GetAllMetrics()
 	if err != nil {
@@ -93,6 +106,7 @@ func (s *ServerMetricService) GetAllMetrics() (*model.Metrics, error) {
 	return metrics, nil
 }
 
+// CreateSignedHash creates hash signed by key in config. Then this hash adds to metric.
 func (s *ServerMetricService) CreateSignedHash(msg string) (string, error) {
 	if s.config.HashKey == "" {
 		return "", &errors.NoEncryptionKeyFoundError{}
@@ -101,6 +115,8 @@ func (s *ServerMetricService) CreateSignedHash(msg string) (string, error) {
 	return hash, nil
 }
 
+// SaveMetricsToDisk method to save all metrics to file if Config.File and StoreInterval is set.
+// It gets all metrics from repository, then marshall it to JSON and write to file.
 func (s *ServerMetricService) SaveMetricsToDisk() error {
 	var mutex sync.Mutex
 	if s.config.StoreFile == "" {
@@ -139,6 +155,8 @@ func (s *ServerMetricService) SaveMetricsToDisk() error {
 	return nil
 }
 
+// LoadMetricsFromDisk method to restore metrics state from disk if Config.Restore is true.
+// It reads Config.File, unmarshalls and then load model.Metrics to repository
 func (s *ServerMetricService) LoadMetricsFromDisk() error {
 	fileLocation := s.config.StoreFile
 

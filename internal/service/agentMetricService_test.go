@@ -19,7 +19,7 @@ func TestAgentMetricService_CollectMetrics(t *testing.T) {
 		config *config.AgentConfig
 	}
 	type args struct {
-		poolCount *int
+		poolCount int
 		metrics   model.Metrics
 	}
 	tests := []struct {

@@ -1,3 +1,4 @@
+// Package routers - main entrypoint to metrics server. It routes requests and serve middlewares.
 package routers
 
 import (
@@ -11,6 +12,7 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
+// NewRouter returns new configured chi router.
 func NewRouter(cfg *config.ServerConfig, store repository.Repository) chi.Router {
 	var (
 		metricService      = service.NewServerMetricService(cfg, store)

@@ -1,3 +1,4 @@
+// Package errors for custom application errors.
 package errors
 
 import "fmt"
