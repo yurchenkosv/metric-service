@@ -2,15 +2,17 @@ package service
 
 import (
 	errors2 "errors"
+	"reflect"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/errors"
 	mock_repository "github.com/yurchenkosv/metric-service/internal/mockRepository"
 	"github.com/yurchenkosv/metric-service/internal/model"
 	"github.com/yurchenkosv/metric-service/internal/repository"
-	"reflect"
-	"testing"
 )
 
 func TestServerMetricService_AddMetric(t *testing.T) {

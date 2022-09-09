@@ -2,6 +2,7 @@ package repository
 
 import (
 	log "github.com/sirupsen/logrus"
+
 	"github.com/yurchenkosv/metric-service/internal/errors"
 	"github.com/yurchenkosv/metric-service/internal/model"
 )

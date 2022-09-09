@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/handlers"
 	"github.com/yurchenkosv/metric-service/internal/middlewares"

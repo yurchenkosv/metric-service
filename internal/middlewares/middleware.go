@@ -6,13 +6,15 @@ import (
 	"crypto/hmac"
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/model"
-	"github.com/yurchenkosv/metric-service/internal/service"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/model"
+	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
 func GzipDecompress(next http.Handler) http.Handler {

@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
-	"github.com/go-co-op/gocron"
-	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/config"
-	migration "github.com/yurchenkosv/metric-service/internal/migrate"
-	"github.com/yurchenkosv/metric-service/internal/repository"
-	"github.com/yurchenkosv/metric-service/internal/service"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-co-op/gocron"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/config"
+	migration "github.com/yurchenkosv/metric-service/internal/migrate"
+	"github.com/yurchenkosv/metric-service/internal/repository"
+	"github.com/yurchenkosv/metric-service/internal/service"
 
 	"github.com/yurchenkosv/metric-service/internal/routers"
 )

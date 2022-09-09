@@ -2,14 +2,16 @@ package service
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"sync"
+
 	log "github.com/sirupsen/logrus"
+
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/errors"
 	"github.com/yurchenkosv/metric-service/internal/model"
 	"github.com/yurchenkosv/metric-service/internal/repository"
-	"io/ioutil"
-	"os"
-	"sync"
 )
 
 type ServerMetricService struct {

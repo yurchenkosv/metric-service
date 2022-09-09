@@ -2,10 +2,12 @@ package service
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/golang/mock/gomock"
+
 	"github.com/yurchenkosv/metric-service/internal/config"
 	mock_repository "github.com/yurchenkosv/metric-service/internal/mockRepository"
-	"testing"
 )
 
 func TestHealthCheckService_CheckRepoHealth(t *testing.T) {
