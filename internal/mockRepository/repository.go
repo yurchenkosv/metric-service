@@ -34,7 +34,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// GetAllMetrics mockRepository base method.
+// GetAllMetrics mocks base method.
 func (m *MockRepository) GetAllMetrics() (*model.Metrics, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllMetrics")
@@ -49,7 +49,7 @@ func (mr *MockRepositoryMockRecorder) GetAllMetrics() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMetrics", reflect.TypeOf((*MockRepository)(nil).GetAllMetrics))
 }
 
-// GetMetricByKey mockRepository base method.
+// GetMetricByKey mocks base method.
 func (m *MockRepository) GetMetricByKey(arg0 string) (*model.Metric, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricByKey", arg0)
@@ -64,7 +64,7 @@ func (mr *MockRepositoryMockRecorder) GetMetricByKey(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricByKey", reflect.TypeOf((*MockRepository)(nil).GetMetricByKey), arg0)
 }
 
-// Ping mockRepository base method.
+// Ping mocks base method.
 func (m *MockRepository) Ping() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Ping")
@@ -78,7 +78,7 @@ func (mr *MockRepositoryMockRecorder) Ping() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockRepository)(nil).Ping))
 }
 
-// SaveCounter mockRepository base method.
+// SaveCounter mocks base method.
 func (m *MockRepository) SaveCounter(arg0 string, arg1 model.Counter) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveCounter", arg0, arg1)
@@ -92,7 +92,7 @@ func (mr *MockRepositoryMockRecorder) SaveCounter(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveCounter", reflect.TypeOf((*MockRepository)(nil).SaveCounter), arg0, arg1)
 }
 
-// SaveGauge mockRepository base method.
+// SaveGauge mocks base method.
 func (m *MockRepository) SaveGauge(arg0 string, arg1 model.Gauge) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveGauge", arg0, arg1)
@@ -106,7 +106,7 @@ func (mr *MockRepositoryMockRecorder) SaveGauge(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveGauge", reflect.TypeOf((*MockRepository)(nil).SaveGauge), arg0, arg1)
 }
 
-// SaveMetricsBatch mockRepository base method.
+// SaveMetricsBatch mocks base method.
 func (m *MockRepository) SaveMetricsBatch(arg0 []model.Metric) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMetricsBatch", arg0)
@@ -118,4 +118,16 @@ func (m *MockRepository) SaveMetricsBatch(arg0 []model.Metric) error {
 func (mr *MockRepositoryMockRecorder) SaveMetricsBatch(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveMetricsBatch", reflect.TypeOf((*MockRepository)(nil).SaveMetricsBatch), arg0)
+}
+
+// Shutdown mocks base method.
+func (m *MockRepository) Shutdown() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Shutdown")
+}
+
+// Shutdown indicates an expected call of Shutdown.
+func (mr *MockRepositoryMockRecorder) Shutdown() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shutdown", reflect.TypeOf((*MockRepository)(nil).Shutdown))
 }

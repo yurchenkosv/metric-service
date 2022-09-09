@@ -24,6 +24,16 @@ func NewServerMetricService(cnf *config.ServerConfig, repo repository.Repository
 	}
 }
 
+func (s ServerMetricService) Shutdown() {
+	if s.config.StoreInterval != 0 && s.config.DBDsn == "" {
+		err := s.SaveMetricsToDisk()
+		if err != nil {
+			log.Error("cannot store metrics in file")
+		}
+	}
+	s.repo.Shutdown()
+}
+
 func (s *ServerMetricService) AddMetric(metric model.Metric) error {
 	switch metric.MType {
 	case "gauge":

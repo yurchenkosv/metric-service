@@ -10,5 +10,6 @@ type Repository interface {
 	GetMetricByKey(string) (*model.Metric, error)
 	SaveMetricsBatch([]model.Metric) error
 	GetAllMetrics() (*model.Metrics, error)
+	Shutdown()
 	Ping() error
 }

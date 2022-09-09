@@ -97,3 +97,7 @@ func (m *mapStorage) SaveMetricsBatch(metrics []model.Metric) error {
 	}
 	return nil
 }
+
+func (m mapStorage) Shutdown() {
+
+}

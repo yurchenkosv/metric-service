@@ -41,7 +41,6 @@ func (h MetricHandler) HandleUpdateMetricJSON(writer http.ResponseWriter, reques
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Warnf("request content: %s", string(body))
 	err = json.Unmarshal(body, &metric)
 	if err != nil {
 		log.Error("cannot unmarshall", err)
@@ -74,7 +73,6 @@ func (h MetricHandler) HandleUpdatesJSON(writer http.ResponseWriter, request *ht
 		log.Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
-	log.Warnf("request content: %s", string(data))
 	err = json.Unmarshal(data, &metrics)
 	if err != nil {
 		log.Error(err)
@@ -204,7 +202,6 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 			return
 		}
 	}
-	log.Warnf("found metric: %v", *foundMetric)
 
 	switch metric.MType {
 	case "counter":
