@@ -2,7 +2,7 @@
 // Source: .\internal\repository\repository.go
 
 // Package mock_repository is a generated GoMock package.
-package mock_repository
+package mockRepository
 
 import (
 	reflect "reflect"
@@ -34,7 +34,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// GetAllMetrics mocks base method.
+// GetAllMetrics mockRepository base method.
 func (m *MockRepository) GetAllMetrics() (*model.Metrics, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllMetrics")
@@ -49,7 +49,7 @@ func (mr *MockRepositoryMockRecorder) GetAllMetrics() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMetrics", reflect.TypeOf((*MockRepository)(nil).GetAllMetrics))
 }
 
-// GetMetricByKey mocks base method.
+// GetMetricByKey mockRepository base method.
 func (m *MockRepository) GetMetricByKey(arg0 string) (*model.Metric, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricByKey", arg0)
@@ -64,7 +64,7 @@ func (mr *MockRepositoryMockRecorder) GetMetricByKey(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricByKey", reflect.TypeOf((*MockRepository)(nil).GetMetricByKey), arg0)
 }
 
-// Ping mocks base method.
+// Ping mockRepository base method.
 func (m *MockRepository) Ping() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Ping")
@@ -78,7 +78,7 @@ func (mr *MockRepositoryMockRecorder) Ping() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockRepository)(nil).Ping))
 }
 
-// SaveCounter mocks base method.
+// SaveCounter mockRepository base method.
 func (m *MockRepository) SaveCounter(arg0 string, arg1 model.Counter) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveCounter", arg0, arg1)
@@ -92,7 +92,7 @@ func (mr *MockRepositoryMockRecorder) SaveCounter(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveCounter", reflect.TypeOf((*MockRepository)(nil).SaveCounter), arg0, arg1)
 }
 
-// SaveGauge mocks base method.
+// SaveGauge mockRepository base method.
 func (m *MockRepository) SaveGauge(arg0 string, arg1 model.Gauge) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveGauge", arg0, arg1)
@@ -106,7 +106,7 @@ func (mr *MockRepositoryMockRecorder) SaveGauge(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveGauge", reflect.TypeOf((*MockRepository)(nil).SaveGauge), arg0, arg1)
 }
 
-// SaveMetricsBatch mocks base method.
+// SaveMetricsBatch mockRepository base method.
 func (m *MockRepository) SaveMetricsBatch(arg0 []model.Metric) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMetricsBatch", arg0)

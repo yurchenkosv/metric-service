@@ -2,31 +2,41 @@ package service
 
 import (
 	"fmt"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/yurchenkosv/metric-service/internal/clients"
 	"github.com/yurchenkosv/metric-service/internal/config"
+	mock_clients "github.com/yurchenkosv/metric-service/internal/mockClients"
 	"github.com/yurchenkosv/metric-service/internal/model"
 	"testing"
 )
 
 func TestAgentMetricService_CollectMetrics(t *testing.T) {
+	type mockBehavior func(client *mock_clients.MockMetricsClient, metrics model.Metrics)
 	type fields struct {
 		config *config.AgentConfig
 	}
 	type args struct {
-		poolCount int
+		poolCount *int
+		metrics   model.Metrics
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   model.Metrics
+		name     string
+		fields   fields
+		args     args
+		want     model.Metrics
+		behavior mockBehavior
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewAgentMetricService(tt.fields.config)
-			assert.Equalf(t, tt.want, s.CollectMetrics(tt.args.poolCount), "CollectMetrics(%v)", tt.args.poolCount)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			client := mock_clients.NewMockMetricsClient(ctrl)
+			tt.behavior(client, tt.args.metrics)
+			s := NewAgentMetricService(tt.fields.config, client)
+			s.CollectMetrics(tt.args.poolCount)
 		})
 	}
 }
@@ -34,6 +44,7 @@ func TestAgentMetricService_CollectMetrics(t *testing.T) {
 func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 	type fields struct {
 		config *config.AgentConfig
+		client clients.MetricServerClient
 	}
 	type args struct {
 		msg string
@@ -49,6 +60,7 @@ func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 			name: "shoud create correct hash with gauge",
 			fields: fields{
 				config: &config.AgentConfig{HashKey: "test"},
+				client: clients.MetricServerClient{},
 			},
 			args: args{
 				msg: "testGauge:gauge:12.5",
@@ -60,6 +72,7 @@ func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 			name: "shoud create correct hash with counter",
 			fields: fields{
 				config: &config.AgentConfig{HashKey: "test"},
+				client: clients.MetricServerClient{},
 			},
 			args: args{
 				msg: "testCounter:counter:7",
@@ -70,7 +83,7 @@ func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewAgentMetricService(tt.fields.config)
+			s := NewAgentMetricService(tt.fields.config, tt.fields.client)
 			got, err := s.CreateSignedHash(tt.args.msg)
 			if !tt.wantErr(t, err, fmt.Sprintf("CreateSignedHash(%v)", tt.args.msg)) {
 				return
@@ -83,6 +96,7 @@ func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 	type fields struct {
 		config *config.AgentConfig
+		client clients.MetricServerClient
 	}
 	type args struct {
 		name    string
@@ -98,6 +112,7 @@ func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 			name: "Should sucess add counter to metrics",
 			fields: fields{
 				config: &config.AgentConfig{},
+				client: clients.MetricServerClient{},
 			},
 			args: args{
 				name:    "",
@@ -108,8 +123,8 @@ func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewAgentMetricService(tt.fields.config)
-			s.appendCounterMetric(tt.args.name, tt.args.value, tt.args.metrics)
+			s := NewAgentMetricService(tt.fields.config, tt.fields.client)
+			s.appendCounterMetric(tt.args.name, tt.args.value)
 		})
 	}
 }
@@ -117,6 +132,7 @@ func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 func TestAgentMetricService_appendGaugeMetric(t *testing.T) {
 	type fields struct {
 		config *config.AgentConfig
+		client clients.MetricServerClient
 	}
 	type args struct {
 		name    string
@@ -132,6 +148,7 @@ func TestAgentMetricService_appendGaugeMetric(t *testing.T) {
 			name: "should success add gauge to metrics",
 			fields: fields{
 				config: &config.AgentConfig{},
+				client: clients.MetricServerClient{},
 			},
 			args: args{
 				name:    "testGauge",
@@ -142,15 +159,16 @@ func TestAgentMetricService_appendGaugeMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewAgentMetricService(tt.fields.config)
-			s.appendGaugeMetric(tt.args.name, tt.args.value, tt.args.metrics)
+			s := NewAgentMetricService(tt.fields.config, tt.fields.client)
+			s.appendGaugeMetric(tt.args.name, tt.args.value)
 		})
 	}
 }
 
 func TestNewAgentMetricService(t *testing.T) {
 	type args struct {
-		cfg *config.AgentConfig
+		config *config.AgentConfig
+		client clients.MetricServerClient
 	}
 	tests := []struct {
 		name string
@@ -158,14 +176,20 @@ func TestNewAgentMetricService(t *testing.T) {
 		want *AgentMetricService
 	}{
 		{
-			args: args{cfg: &config.AgentConfig{}},
+			args: args{
+				config: &config.AgentConfig{},
+				client: clients.MetricServerClient{},
+			},
 			name: "should create AgentMetricService",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.want = &AgentMetricService{config: tt.args.cfg}
-			assert.Equalf(t, tt.want, NewAgentMetricService(tt.args.cfg), "NewAgentMetricService(%v)", tt.args.cfg)
+			tt.want = &AgentMetricService{
+				config: tt.args.config,
+				client: tt.args.client,
+			}
+			assert.IsType(t, tt.want, NewAgentMetricService(tt.args.config, tt.args.client), "NewAgentMetricService(%v %v)", tt.args.config, tt.args.client)
 		})
 	}
 }

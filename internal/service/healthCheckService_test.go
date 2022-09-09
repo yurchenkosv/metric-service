@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/yurchenkosv/metric-service/internal/config"
-	mock_repository "github.com/yurchenkosv/metric-service/internal/mocks"
+	mock_repository "github.com/yurchenkosv/metric-service/internal/mockRepository"
 	"testing"
 )
 

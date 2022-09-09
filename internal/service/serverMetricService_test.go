@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/errors"
-	mock_repository "github.com/yurchenkosv/metric-service/internal/mocks"
+	mock_repository "github.com/yurchenkosv/metric-service/internal/mockRepository"
 	"github.com/yurchenkosv/metric-service/internal/model"
 	"github.com/yurchenkosv/metric-service/internal/repository"
 	"reflect"
