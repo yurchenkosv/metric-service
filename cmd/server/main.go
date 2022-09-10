@@ -37,9 +37,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	sched := gocron.NewScheduler(time.UTC)
 
-	metricService := service.NewServerMetricService(cfg, repo)
 	log.WithFields(
 		log.Fields{
 			"address": cfg.Address,
@@ -52,6 +50,7 @@ func main() {
 		repo = repository.NewMapRepo()
 	}
 
+	metricService := service.NewServerMetricService(cfg, repo)
 	if cfg.Restore {
 		err := metricService.LoadMetricsFromDisk()
 		if err != nil {
@@ -59,9 +58,10 @@ func main() {
 		}
 	}
 
+	sched := gocron.NewScheduler(time.UTC)
 	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 		_, err := sched.Every(cfg.StoreInterval).
-			Do(metricService.SaveMetricsToDisk())
+			Do(metricService.SaveMetricsToDisk)
 		if err != nil {
 			log.Error("cannot save metrics to disk", err)
 		}
