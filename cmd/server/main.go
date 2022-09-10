@@ -71,7 +71,7 @@ func main() {
 	router := routers.NewRouter(cfg, repo)
 	server := &http.Server{Addr: cfg.Address, Handler: router}
 	go func(server *http.Server) {
-		log.Fatal(server.ListenAndServe())
+		log.Warn(server.ListenAndServe())
 	}(server)
 
 	<-osSignal
