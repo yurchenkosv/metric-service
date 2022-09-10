@@ -76,13 +76,15 @@ func main() {
 
 	<-osSignal
 	log.Warn("shuting down server")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	sched.Stop()
 	err = server.Shutdown(ctx)
 	if err != nil {
 		log.Error(err)
 	}
+
+	sched.Stop()
 	metricService.Shutdown()
 	os.Exit(0)
 }
