@@ -2,13 +2,15 @@ package service
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/yurchenkosv/metric-service/internal/clients"
 	"github.com/yurchenkosv/metric-service/internal/config"
 	mock_clients "github.com/yurchenkosv/metric-service/internal/mockClients"
 	"github.com/yurchenkosv/metric-service/internal/model"
-	"testing"
 )
 
 func TestAgentMetricService_CollectMetrics(t *testing.T) {
@@ -17,7 +19,7 @@ func TestAgentMetricService_CollectMetrics(t *testing.T) {
 		config *config.AgentConfig
 	}
 	type args struct {
-		poolCount *int
+		poolCount int
 		metrics   model.Metrics
 	}
 	tests := []struct {

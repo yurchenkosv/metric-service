@@ -1,13 +1,14 @@
 package routers
 
 import (
-	"github.com/yurchenkosv/metric-service/internal/config"
-	"github.com/yurchenkosv/metric-service/internal/repository"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/yurchenkosv/metric-service/internal/config"
+	"github.com/yurchenkosv/metric-service/internal/repository"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

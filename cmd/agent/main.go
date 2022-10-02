@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-co-op/gocron"
-	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/clients"
-	"github.com/yurchenkosv/metric-service/internal/config"
-	"github.com/yurchenkosv/metric-service/internal/service"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/go-co-op/gocron"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/clients"
+	"github.com/yurchenkosv/metric-service/internal/config"
+	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
 var (
@@ -24,7 +26,6 @@ func init() {
 }
 
 func main() {
-	poolCount := 1
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
@@ -40,7 +41,7 @@ func main() {
 
 	sched := gocron.NewScheduler(time.UTC)
 	_, err = sched.Every(cfg.PollInterval).
-		Do(agentService.CollectMetrics, &poolCount)
+		Do(agentService.CollectMetrics, 1)
 	if err != nil {
 		log.Fatal("cannot start collect job", err)
 	}

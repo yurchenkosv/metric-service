@@ -1,17 +1,22 @@
 package clients
 
 import (
+	"time"
+
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+
 	"github.com/yurchenkosv/metric-service/internal/model"
-	"time"
 )
 
+// MetricServerClient struct with address and resty client to perform http requests.
 type MetricServerClient struct {
 	metricServerAddress string
 	client              *resty.Client
 }
 
+// NewMetricServerClient constructor creates resty client, configures it.
+// Returns pointer to MetricServerClient
 func NewMetricServerClient(address string) *MetricServerClient {
 	client := &MetricServerClient{
 		metricServerAddress: address,
@@ -24,6 +29,7 @@ func NewMetricServerClient(address string) *MetricServerClient {
 	return client
 }
 
+// PushMetrics method sends metrics to metric server in multiple threads via http.
 func (c MetricServerClient) PushMetrics(metrics model.Metrics) {
 	go func() {
 		if len(metrics.Metric) > 0 {

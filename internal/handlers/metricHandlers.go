@@ -3,24 +3,29 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	log "github.com/sirupsen/logrus"
-	"github.com/yurchenkosv/metric-service/internal/errors"
-	"github.com/yurchenkosv/metric-service/internal/model"
-	"github.com/yurchenkosv/metric-service/internal/service"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/errors"
+	"github.com/yurchenkosv/metric-service/internal/model"
+	"github.com/yurchenkosv/metric-service/internal/service"
 )
 
+// MetricHandler struct that we need for passing service.ServerMetricService into.
 type MetricHandler struct {
 	metricService *service.ServerMetricService
 }
 
+// NewMetricHandler sets service.ServerMetricService and returns pointer to MetricHandler
 func NewMetricHandler(metricService *service.ServerMetricService) *MetricHandler {
 	return &MetricHandler{metricService: metricService}
 }
 
+// validateMetric simple function that return true if metric name is valid and false if not.
 func validateMetric(metricType string) bool {
 	switch metricType {
 	case "counter":
@@ -32,6 +37,8 @@ func validateMetric(metricType string) bool {
 	}
 }
 
+// HandleUpdateMetricJSON handler for single metric in JSON format.
+// It unmarshall metric and pass it to service.ServerMetricService to save.
 func (h MetricHandler) HandleUpdateMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metric model.Metric
 
@@ -41,7 +48,6 @@ func (h MetricHandler) HandleUpdateMetricJSON(writer http.ResponseWriter, reques
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Warnf("request content: %s", string(body))
 	err = json.Unmarshal(body, &metric)
 	if err != nil {
 		log.Error("cannot unmarshall", err)
@@ -62,6 +68,8 @@ func (h MetricHandler) HandleUpdateMetricJSON(writer http.ResponseWriter, reques
 	}
 }
 
+// HandleUpdatesJSON handler for batch of metrics in JSON format.
+// It unmarshalls metrics then pass them to service.ServerMetricService to save.
 func (h MetricHandler) HandleUpdatesJSON(writer http.ResponseWriter, request *http.Request) {
 	if request.Header.Get("Content-Type") != "application/json" {
 		writer.WriteHeader(http.StatusBadRequest)
@@ -74,7 +82,6 @@ func (h MetricHandler) HandleUpdatesJSON(writer http.ResponseWriter, request *ht
 		log.Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
-	log.Warnf("request content: %s", string(data))
 	err = json.Unmarshal(data, &metrics)
 	if err != nil {
 		log.Error(err)
@@ -88,6 +95,9 @@ func (h MetricHandler) HandleUpdatesJSON(writer http.ResponseWriter, request *ht
 	}
 }
 
+// HandleUpdateMetric handler for single metric, that transmitted over url.
+// It parses parameters /metricType/metricName/metricValue ,
+// creates Metric object and passes it to  service.ServerMetricService to save
 func (h MetricHandler) HandleUpdateMetric(writer http.ResponseWriter, request *http.Request) {
 	metricType := chi.URLParam(request, "metricType")
 	metricName := chi.URLParam(request, "metricName")
@@ -130,6 +140,8 @@ func (h MetricHandler) HandleUpdateMetric(writer http.ResponseWriter, request *h
 	}
 }
 
+// HandleGetMetric handler to get metric from url params.
+// It parses url params /metricType/metricName and returns metric value by name in text representation.
 func (h MetricHandler) HandleGetMetric(writer http.ResponseWriter, request *http.Request) {
 	metricType := chi.URLParam(request, "metricType")
 	metricName := chi.URLParam(request, "metricName")
@@ -159,6 +171,8 @@ func (h MetricHandler) HandleGetMetric(writer http.ResponseWriter, request *http
 	}
 }
 
+// HandleGetAllMetrics handler for print all metrics.
+// It queries service.ServerMetricService and prints all metrics in text view
 func (h MetricHandler) HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
 	metrics, err := h.metricService.GetAllMetrics()
 	if err != nil {
@@ -170,6 +184,9 @@ func (h MetricHandler) HandleGetAllMetrics(writer http.ResponseWriter, request *
 	writer.Write([]byte(metrics.String()))
 }
 
+// HandleGetMetricJSON handler for get metric based on JSON query.
+// It unmarshalls input JSON, then queries service.ServerMetricService for metric by key.
+// Then add fields to original metric and marshalls it to JSON
 func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *http.Request) {
 	var metric model.Metric
 	var msg string
@@ -204,7 +221,6 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 			return
 		}
 	}
-	log.Warnf("found metric: %v", *foundMetric)
 
 	switch metric.MType {
 	case "counter":

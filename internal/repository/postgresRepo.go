@@ -3,14 +3,17 @@ package repository
 import (
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
+
 	"github.com/yurchenkosv/metric-service/internal/model"
 )
 
 type PostgresRepo struct {
-	Conn  *sqlx.DB
-	DBURI string
+	Conn  *sqlx.DB // Conn stores connection to current postgres instance
+	DBURI string   // DBURI connection string to initialize postgres connection
 }
 
+// NewPostgresRepo initializes connection to postgres.
+// It's also configures connection and returns pointer to current PostgresRepo.
 func NewPostgresRepo(dbURI string) *PostgresRepo {
 	conn, err := sqlx.Connect("postgres", dbURI)
 	if err != nil {
@@ -25,11 +28,15 @@ func NewPostgresRepo(dbURI string) *PostgresRepo {
 	}
 }
 
+// Shutdown made to drop idle connections, wait current connections successfully done.
+// Then connection to postgres instance will be terminated.
 func (repo *PostgresRepo) Shutdown() {
 	repo.Conn.SetMaxIdleConns(-1)
 	repo.Conn.Close()
 }
 
+// SaveCounter saves in database counter metric.
+// When conflict occurs, query updates current value of metric
 func (repo *PostgresRepo) SaveCounter(name string, counter model.Counter) error {
 	query := `
 		INSERT INTO metrics(
@@ -49,6 +56,8 @@ func (repo *PostgresRepo) SaveCounter(name string, counter model.Counter) error 
 	return nil
 }
 
+// SaveGauge saves in database gauge metric.
+// When conflict occurs, query updates current value of metric
 func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge) error {
 	query := `
 		INSERT INTO metrics(
@@ -68,6 +77,8 @@ func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge) error {
 	return nil
 }
 
+// GetMetricByKey selects all data in DB by key provided by name string parameter.
+// Returns model.Metric as single value because of metric key is unic
 func (repo *PostgresRepo) GetMetricByKey(name string) (*model.Metric, error) {
 	var metric model.Metric
 	query := `
@@ -86,6 +97,7 @@ func (repo *PostgresRepo) GetMetricByKey(name string) (*model.Metric, error) {
 	return &metric, nil
 }
 
+// GetAllMetrics selects all metrics in DB and returns it as pointer to model.Metrics
 func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
 	var metrics model.Metrics
 
@@ -122,12 +134,15 @@ func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
 	return &metrics, nil
 }
 
+// Ping creates connection to DB and do select on it.
+// When ping unsuccessful error returns. It means that database is unhealthy
 func (repo *PostgresRepo) Ping() error {
 	return repo.Conn.Ping()
 }
 
+// SaveMetricsBatch saves slice of model.Metric in DB in one transaction.
+// When error occurs, transaction rollbacks.
 func (repo *PostgresRepo) SaveMetricsBatch(metrics []model.Metric) error {
-
 	tx, err := repo.Conn.Begin()
 	if err != nil {
 		log.Error(err)

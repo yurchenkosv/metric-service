@@ -2,18 +2,21 @@ package service
 
 import (
 	"fmt"
+	"math/rand"
+	"runtime"
+	"sync"
+
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 	log "github.com/sirupsen/logrus"
+
 	"github.com/yurchenkosv/metric-service/internal/clients"
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/errors"
 	"github.com/yurchenkosv/metric-service/internal/model"
-	"math/rand"
-	"runtime"
-	"sync"
 )
 
+// AgentMetricService serves all work with metrics on agent (metric collector) side
 type AgentMetricService struct {
 	config  *config.AgentConfig
 	client  clients.MetricsClient
@@ -21,6 +24,7 @@ type AgentMetricService struct {
 	mutex   sync.Mutex
 }
 
+// NewAgentMetricService creates new AgentMetricService with filled fields and returns pointer on this object
 func NewAgentMetricService(cfg *config.AgentConfig, client clients.MetricsClient) *AgentMetricService {
 	return &AgentMetricService{
 		config:  cfg,
@@ -29,11 +33,13 @@ func NewAgentMetricService(cfg *config.AgentConfig, client clients.MetricsClient
 	}
 }
 
+// Push is function to send metrics to server via network
 func (s *AgentMetricService) Push() {
 	s.client.PushMetrics(*s.metrics)
 	s.metrics = &model.Metrics{Metric: []model.Metric{}}
 }
 
+// CreateSignedHash creates hash signed by key in config. Then this hash adds to metric.
 func (s *AgentMetricService) CreateSignedHash(msg string) (string, error) {
 	if s.config.HashKey == "" {
 		return "", &errors.NoEncryptionKeyFoundError{}
@@ -42,7 +48,9 @@ func (s *AgentMetricService) CreateSignedHash(msg string) (string, error) {
 	return hash, nil
 }
 
-func (s *AgentMetricService) CollectMetrics(poolCount *int) {
+// CollectMetrics main method for this service. It's collects cpu and RAM metrics
+// and stores it in metrics field of AgentMetricService
+func (s *AgentMetricService) CollectMetrics(poolCount int) {
 	var wg sync.WaitGroup
 
 	wg.Add(2)
@@ -79,7 +87,7 @@ func (s *AgentMetricService) CollectMetrics(poolCount *int) {
 		s.appendGaugeMetric("Sys", float64(rtm.Sys))
 		s.appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc))
 		s.appendGaugeMetric("RandomValue", rand.Float64())
-		s.appendCounterMetric("PollCount", int64(*poolCount))
+		s.appendCounterMetric("PollCount", int64(poolCount))
 		wg.Done()
 	}()
 
@@ -104,8 +112,6 @@ func (s *AgentMetricService) CollectMetrics(poolCount *int) {
 	}()
 
 	wg.Wait()
-	newCount := *poolCount + 1
-	poolCount = &newCount
 }
 
 func (s *AgentMetricService) appendGaugeMetric(name string, value float64) {

@@ -1,24 +1,30 @@
+//asdasdasd
 package config
 
 import (
 	"flag"
-	"github.com/caarlos0/env/v6"
 	"time"
+
+	"github.com/caarlos0/env/v6"
 )
 
+// ServerConfig struct with fields, useful for configuring metrics server.
 type ServerConfig struct {
-	Address       string        `env:"ADDRESS"`
-	StoreInterval time.Duration `env:"STORE_INTERVAL"`
-	StoreFile     string        `env:"STORE_FILE"`
-	Restore       bool          `env:"RESTORE"`
-	HashKey       string        `env:"KEY"`
-	DBDsn         string        `env:"DATABASE_DSN"`
+	Address       string        `env:"ADDRESS"`        // server address to bind to.
+	StoreInterval time.Duration `env:"STORE_INTERVAL"` // when to flush metrics to disk.
+	StoreFile     string        `env:"STORE_FILE"`     // path to file where metrics are stored.
+	Restore       bool          `env:"RESTORE"`        // If set to true, read StoreFile to restore metrics state
+	HashKey       string        `env:"KEY"`            // key to create/validate hash
+	DBDsn         string        `env:"DATABASE_DSN"`   // Postgres connection string in DSN format
 }
 
+// NewServerConfig constructor returns pointer to new ServerConfig
 func NewServerConfig() *ServerConfig {
 	return &ServerConfig{}
 }
 
+// Parse method to fulfill ServerConfig fields.
+// It reads flags and env variables.
 func (c *ServerConfig) Parse() error {
 	flag.StringVar(&c.Address, "a", "localhost:8080", "http address in format localhost:8080")
 	flag.DurationVar(&c.StoreInterval, "i", 300*time.Second, "when to flush metrics to disk. Inactive for agent.")
