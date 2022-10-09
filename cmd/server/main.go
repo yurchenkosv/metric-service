@@ -12,7 +12,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/yurchenkosv/metric-service/internal/config"
-	migration "github.com/yurchenkosv/metric-service/internal/migrate"
 	"github.com/yurchenkosv/metric-service/internal/repository"
 	"github.com/yurchenkosv/metric-service/internal/service"
 
@@ -44,8 +43,8 @@ func main() {
 		}).Info("Starting metric server")
 
 	if cfg.DBDsn != "" {
-		migration.Migrate(cfg.DBDsn)
 		repo = repository.NewPostgresRepo(cfg.DBDsn)
+		repo.Migrate("db/migrations")
 	} else {
 		repo = repository.NewMapRepo()
 	}

@@ -21,6 +21,10 @@ func NewMapRepo() *mapStorage {
 	}
 }
 
+// Migrate do nothin
+func (m mapStorage) Migrate(path string) {
+}
+
 // SaveCounter just put counter in map
 func (m *mapStorage) SaveCounter(name string, val model.Counter) error {
 	if len(m.CounterMetric) == 0 {

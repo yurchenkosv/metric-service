@@ -1,6 +1,10 @@
 package repository
 
 import (
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/jackc/pgx/v4"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 
@@ -25,6 +29,21 @@ func NewPostgresRepo(dbURI string) *PostgresRepo {
 	return &PostgresRepo{
 		Conn:  conn,
 		DBURI: dbURI,
+	}
+}
+
+// Migrate executes migrations to set database to initial state
+func (repo *PostgresRepo) Migrate(migrationsPath string) {
+	m, err := migrate.New(
+		"file://"+migrationsPath,
+		repo.DBURI)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := m.Up(); err != nil {
+		if err != migrate.ErrNoChange {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -101,7 +120,7 @@ func (repo *PostgresRepo) GetMetricByKey(name string) (*model.Metric, error) {
 func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
 	var metrics model.Metrics
 
-	query := "SELECT metric_id, metric_type, metric_delta, metric_value, hash FROM metrics"
+	query := "SELECT metric_id, metric_type, metric_delta, metric_value FROM metrics"
 
 	result, err := repo.Conn.Query(query)
 	if err != nil {

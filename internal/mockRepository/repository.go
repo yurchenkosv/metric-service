@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+
 	model "github.com/yurchenkosv/metric-service/internal/model"
 )
 
@@ -62,6 +63,18 @@ func (m *MockRepository) GetMetricByKey(arg0 string) (*model.Metric, error) {
 func (mr *MockRepositoryMockRecorder) GetMetricByKey(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricByKey", reflect.TypeOf((*MockRepository)(nil).GetMetricByKey), arg0)
+}
+
+// Migrate mocks base method.
+func (m *MockRepository) Migrate(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Migrate", arg0)
+}
+
+// Migrate indicates an expected call of Migrate.
+func (mr *MockRepositoryMockRecorder) Migrate(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Migrate", reflect.TypeOf((*MockRepository)(nil).Migrate), arg0)
 }
 
 // Ping mocks base method.

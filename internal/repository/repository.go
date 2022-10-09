@@ -26,6 +26,9 @@ type Repository interface {
 	//When it's called, repository should save metrics, close connections and be ready to application shutdown
 	Shutdown()
 
+	//Migrate prepares repository to work
+	Migrate(string)
+
 	// Ping should return error when repository assumed as unhealthy
 	Ping() error
 }
