@@ -11,8 +11,8 @@ import (
 
 // MetricServerClient struct with address and resty client to perform http requests.
 type MetricServerClient struct {
-	metricServerAddress string
 	client              *resty.Client
+	metricServerAddress string
 }
 
 // NewMetricServerClient constructor creates resty client, configures it.

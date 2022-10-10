@@ -14,6 +14,7 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/repository"
 	"github.com/yurchenkosv/metric-service/internal/service"
+	"github.com/yurchenkosv/metric-service/pkg/finalizer"
 
 	"github.com/yurchenkosv/metric-service/internal/routers"
 )
@@ -51,18 +52,18 @@ func main() {
 
 	metricService := service.NewServerMetricService(cfg, repo)
 	if cfg.Restore {
-		err := metricService.LoadMetricsFromDisk()
-		if err != nil {
+		err2 := metricService.LoadMetricsFromDisk()
+		if err2 != nil {
 			log.Fatal("cannot read metrics from file")
 		}
 	}
 
 	sched := gocron.NewScheduler(time.UTC)
 	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
-		_, err := sched.Every(cfg.StoreInterval).
+		_, err2 := sched.Every(cfg.StoreInterval).
 			Do(metricService.SaveMetricsToDisk)
-		if err != nil {
-			log.Error("cannot save metrics to disk", err)
+		if err2 != nil {
+			log.Error("cannot save metrics to disk", err2)
 		}
 		sched.StartAsync()
 	}
@@ -82,8 +83,9 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	}
+	finalizer.Shutdown(func() {
+		sched.Stop()
+		metricService.Shutdown()
+	})
 
-	sched.Stop()
-	metricService.Shutdown()
-	os.Exit(0)
 }

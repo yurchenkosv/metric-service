@@ -10,8 +10,8 @@ import (
 
 // ServerConfig struct with fields, useful for configuring metrics server.
 type ServerConfig struct {
-	Address       string        `env:"ADDRESS"`        // server address to bind to.
 	StoreInterval time.Duration `env:"STORE_INTERVAL"` // when to flush metrics to disk.
+	Address       string        `env:"ADDRESS"`        // server address to bind to.
 	StoreFile     string        `env:"STORE_FILE"`     // path to file where metrics are stored.
 	Restore       bool          `env:"RESTORE"`        // If set to true, read StoreFile to restore metrics state
 	HashKey       string        `env:"KEY"`            // key to create/validate hash

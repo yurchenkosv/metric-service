@@ -33,9 +33,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 func findExitFunctionCall(pass *analysis.Pass, x *ast.CallExpr) {
 	switch exp := x.Fun.(type) {
 	case *ast.SelectorExpr:
-		ident := exp.X.(*ast.Ident)
-		if ident.Name == "os" && exp.Sel.Name == "Exit" {
-			pass.Reportf(ident.Pos(), "os.Exit in main package")
+		if exp.Sel.Name == "Exit" {
+			pass.Reportf(exp.Sel.Pos(), "os.Exit in main package")
 		}
 	}
 }
