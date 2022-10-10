@@ -17,7 +17,10 @@ import (
 )
 
 var (
-	cfg = config.AgentConfig{}
+	cfg          = config.AgentConfig{}
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
 )
 
 func init() {
@@ -27,6 +30,9 @@ func init() {
 }
 
 func main() {
+
+	fmt.Printf(" Build version: %s\n Build date: %s\n Build commit: %s\n", buildVersion, buildDate, buildCommit)
+
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)

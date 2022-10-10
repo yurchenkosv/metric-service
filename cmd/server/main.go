@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,8 +21,11 @@ import (
 )
 
 var (
-	cfg  = config.NewServerConfig()
-	repo repository.Repository
+	cfg          = config.NewServerConfig()
+	repo         repository.Repository
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
 )
 
 func init() {
@@ -31,6 +35,9 @@ func init() {
 }
 
 func main() {
+
+	fmt.Printf(" Build version: %s\n Build date: %s\n Build commit: %s\n", buildVersion, buildDate, buildCommit)
+
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
 	err := cfg.Parse()
