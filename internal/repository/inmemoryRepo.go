@@ -21,7 +21,7 @@ func NewMapRepo() *mapStorage {
 	}
 }
 
-// Migrate do nothin
+// Migrate do nothing
 func (m mapStorage) Migrate(path string) {
 }
 
@@ -34,7 +34,7 @@ func (m *mapStorage) SaveCounter(name string, val model.Counter) error {
 	return nil
 }
 
-// SaveGauge jus put gauge in map
+// SaveGauge just put gauge in map
 func (m *mapStorage) SaveGauge(name string, val model.Gauge) error {
 	if len(m.GaugeMetric) == 0 {
 		m.GaugeMetric = make(map[string]model.Gauge)
@@ -54,7 +54,7 @@ func (m *mapStorage) GetMetricByKey(key string) (*model.Metric, error) {
 	}
 	if val, ok := m.GaugeMetric[key]; ok {
 		metric.ID = key
-		metric.MType = "counter"
+		metric.MType = "gauge"
 		metric.Value = &val
 		return &metric, nil
 	}
