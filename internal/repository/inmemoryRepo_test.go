@@ -69,7 +69,7 @@ func Test_mapStorage_GetAllMetrics(t *testing.T) {
 				CounterMetric: tt.fields.CounterMetric,
 			}
 			got, err := m.GetAllMetrics()
-			if !tt.wantErr(t, err, fmt.Sprintf("GetAllMetrics()")) {
+			if !tt.wantErr(t, err, fmt.Sprint("GetAllMetrics()")) {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "GetAllMetrics()")
@@ -204,7 +204,7 @@ func Test_mapStorage_Ping(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			tt.wantErr(t, m.Ping(), fmt.Sprintf("Ping()"))
+			tt.wantErr(t, m.Ping(), fmt.Sprint("Ping()"))
 		})
 	}
 }

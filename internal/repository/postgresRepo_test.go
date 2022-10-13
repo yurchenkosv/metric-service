@@ -277,7 +277,7 @@ func TestPostgresRepo_SaveCounter(t *testing.T) {
 		name    string
 		fields  fields
 		before  func(t *testing.T, ctx context.Context) testcontainers.Container
-		after   func(conn *sqlx.DB, metric_id string) *model.Counter
+		after   func(conn *sqlx.DB, metricID string) *model.Counter
 		args    args
 		wantErr bool
 	}{
@@ -292,10 +292,10 @@ func TestPostgresRepo_SaveCounter(t *testing.T) {
 				counter: 123,
 			},
 			wantErr: false,
-			after: func(conn *sqlx.DB, metric_id string) *model.Counter {
+			after: func(conn *sqlx.DB, metricID string) *model.Counter {
 				var counter model.Counter
-				qry := "SELECT metric_delta FROM metrics WHERE metric_id=$1"
-				result := conn.QueryRow(qry, metric_id)
+				qry := "SELECT metric_delta FROM metrics WHERE metricID=$1"
+				result := conn.QueryRow(qry, metricID)
 				err := result.Scan(&counter)
 				if err != nil {
 					fmt.Print(err)
@@ -340,7 +340,7 @@ func TestPostgresRepo_SaveGauge(t *testing.T) {
 		fields  fields
 		args    args
 		before  func(t *testing.T, ctx context.Context) testcontainers.Container
-		after   func(conn *sqlx.DB, metric_id string) *model.Gauge
+		after   func(conn *sqlx.DB, metricID string) *model.Gauge
 		wantErr bool
 	}{
 		{
@@ -353,10 +353,10 @@ func TestPostgresRepo_SaveGauge(t *testing.T) {
 				gauge: 500.123,
 			},
 			before: initContainers,
-			after: func(conn *sqlx.DB, metric_id string) *model.Gauge {
+			after: func(conn *sqlx.DB, metricID string) *model.Gauge {
 				var gauge model.Gauge
-				qry := "SELECT metric_value FROM metrics WHERE metric_id=$1"
-				result := conn.QueryRow(qry, metric_id)
+				qry := "SELECT metric_value FROM metrics WHERE metricID=$1"
+				result := conn.QueryRow(qry, metricID)
 				err := result.Scan(&gauge)
 				if err != nil {
 					fmt.Print(err)
@@ -436,18 +436,21 @@ func TestPostgresRepo_SaveMetricsBatch(t *testing.T) {
 				}
 				for rows.Next() {
 					var (
-						metric_id    string
-						metric_type  string
-						metric_delta *model.Counter
-						metric_value *model.Gauge
-						metric       model.Metric
+						metricID    string
+						metricType  string
+						metricDelta *model.Counter
+						metricValue *model.Gauge
+						metric      model.Metric
 					)
 
-					rows.Scan(&metric_id, &metric_type, &metric_delta, &metric_value)
-					metric.ID = metric_id
-					metric.MType = metric_type
-					metric.Delta = metric_delta
-					metric.Value = metric_value
+					err2 := rows.Scan(&metricID, &metricType, &metricDelta, &metricValue)
+					if err2 != nil {
+						fmt.Println(err2)
+					}
+					metric.ID = metricID
+					metric.MType = metricType
+					metric.Delta = metricDelta
+					metric.Value = metricValue
 					metrics = append(metrics, metric)
 				}
 				return metrics
