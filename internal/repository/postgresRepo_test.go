@@ -294,7 +294,7 @@ func TestPostgresRepo_SaveCounter(t *testing.T) {
 			wantErr: false,
 			after: func(conn *sqlx.DB, metricID string) *model.Counter {
 				var counter model.Counter
-				qry := "SELECT metric_delta FROM metrics WHERE metricID=$1"
+				qry := "SELECT metric_delta FROM metrics WHERE metric_id=$1"
 				result := conn.QueryRow(qry, metricID)
 				err := result.Scan(&counter)
 				if err != nil {
@@ -355,7 +355,7 @@ func TestPostgresRepo_SaveGauge(t *testing.T) {
 			before: initContainers,
 			after: func(conn *sqlx.DB, metricID string) *model.Gauge {
 				var gauge model.Gauge
-				qry := "SELECT metric_value FROM metrics WHERE metricID=$1"
+				qry := "SELECT metric_value FROM metrics WHERE metric_id=$1"
 				result := conn.QueryRow(qry, metricID)
 				err := result.Scan(&gauge)
 				if err != nil {
