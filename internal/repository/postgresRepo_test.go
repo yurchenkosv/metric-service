@@ -434,6 +434,10 @@ func TestPostgresRepo_SaveMetricsBatch(t *testing.T) {
 				if err != nil {
 					fmt.Println(err)
 				}
+				err = rows.Err()
+				if err != nil {
+					fmt.Println(err)
+				}
 				for rows.Next() {
 					var (
 						metricID    string
