@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -202,7 +201,6 @@ func TestAgentMetricService_Push(t *testing.T) {
 		config  *config.AgentConfig
 		client  clients.MetricsClient
 		metrics *model.Metrics
-		mutex   sync.Mutex
 	}
 	tests := []struct {
 		name   string
@@ -212,12 +210,7 @@ func TestAgentMetricService_Push(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &AgentMetricService{
-				config:  tt.fields.config,
-				client:  tt.fields.client,
-				metrics: tt.fields.metrics,
-				mutex:   tt.fields.mutex,
-			}
+			s := NewAgentMetricService(tt.fields.config, tt.fields.client)
 			s.Push()
 		})
 	}
