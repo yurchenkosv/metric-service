@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	errors2 "errors"
 	"reflect"
 	"testing"
@@ -16,12 +17,13 @@ import (
 )
 
 func TestServerMetricService_AddMetric(t *testing.T) {
-	type mockBehavior func(s *mock_repository.MockRepository, metric model.Metric)
+	type mockBehavior func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context)
 	type fields struct {
 		config *config.ServerConfig
 	}
 	type args struct {
 		metric model.Metric
+		ctx    context.Context
 	}
 	tests := []struct {
 		name     string
@@ -39,10 +41,11 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 					MType: "counter",
 					Delta: model.NewCounter(15),
 				},
+				ctx: context.Background(),
 			},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository, metric model.Metric) {
-				s.EXPECT().SaveCounter(metric.ID, *metric.Delta).Return(nil)
+			behavior: func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context) {
+				s.EXPECT().SaveCounter(metric.ID, *metric.Delta, ctx).Return(nil)
 			},
 		},
 		{
@@ -54,10 +57,11 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 					MType: "gauge",
 					Value: model.NewGauge(12.5),
 				},
+				ctx: context.Background(),
 			},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository, metric model.Metric) {
-				s.EXPECT().SaveGauge(metric.ID, *metric.Value).Return(nil)
+			behavior: func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context) {
+				s.EXPECT().SaveGauge(metric.ID, *metric.Value, ctx).Return(nil)
 			},
 		},
 	}
@@ -66,12 +70,12 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			tt.behavior(repo, tt.args.metric)
+			tt.behavior(repo, tt.args.metric, tt.args.ctx)
 			s := &ServerMetricService{
 				config: tt.fields.config,
 				repo:   repo,
 			}
-			if err := s.AddMetric(tt.args.metric); (err != nil) != tt.wantErr {
+			if err := s.AddMetric(tt.args.metric, tt.args.ctx); (err != nil) != tt.wantErr {
 				t.Errorf("AddMetric() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -79,12 +83,13 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 }
 
 func TestServerMetricService_AddMetricBatch(t *testing.T) {
-	type mockBehavior func(s *mock_repository.MockRepository, metrics model.Metrics)
+	type mockBehavior func(s *mock_repository.MockRepository, metrics model.Metrics, ctx context.Context)
 	type fields struct {
 		config *config.ServerConfig
 	}
 	type args struct {
 		metrics model.Metrics
+		ctx     context.Context
 	}
 	tests := []struct {
 		name     string
@@ -97,6 +102,7 @@ func TestServerMetricService_AddMetricBatch(t *testing.T) {
 			name:   "should successfully save metric batch",
 			fields: fields{config: &config.ServerConfig{}},
 			args: args{
+				ctx: context.Background(),
 				metrics: model.Metrics{Metric: []model.Metric{
 					{
 						ID:    "testGauge",
@@ -111,8 +117,8 @@ func TestServerMetricService_AddMetricBatch(t *testing.T) {
 				}},
 			},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository, metrics model.Metrics) {
-				s.EXPECT().SaveMetricsBatch(metrics.Metric).Return(nil)
+			behavior: func(s *mock_repository.MockRepository, metrics model.Metrics, ctx context.Context) {
+				s.EXPECT().SaveMetricsBatch(metrics.Metric, ctx).Return(nil)
 			},
 		},
 	}
@@ -121,12 +127,12 @@ func TestServerMetricService_AddMetricBatch(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			tt.behavior(repo, tt.args.metrics)
+			tt.behavior(repo, tt.args.metrics, tt.args.ctx)
 			s := &ServerMetricService{
 				config: tt.fields.config,
 				repo:   repo,
 			}
-			if err := s.AddMetricBatch(tt.args.metrics); (err != nil) != tt.wantErr {
+			if err := s.AddMetricBatch(tt.args.metrics, tt.args.ctx); (err != nil) != tt.wantErr {
 				t.Errorf("AddMetricBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -212,21 +218,28 @@ func TestServerMetricService_CreateSignedHash(t *testing.T) {
 }
 
 func TestServerMetricService_GetAllMetrics(t *testing.T) {
-	type mockBehavior func(s *mock_repository.MockRepository)
+	type mockBehavior func(s *mock_repository.MockRepository, ctx context.Context)
 	type fields struct {
 		config *config.ServerConfig
+	}
+	type args struct {
+		ctx context.Context
 	}
 	tests := []struct {
 		name     string
 		fields   fields
 		want     *model.Metrics
 		wantErr  bool
+		args     args
 		behavior mockBehavior
 	}{
 		{
 			name: "should return all metrics",
 			fields: fields{
 				config: &config.ServerConfig{},
+			},
+			args: args{
+				ctx: context.Background(),
 			},
 			want: &model.Metrics{Metric: []model.Metric{
 				{
@@ -241,7 +254,7 @@ func TestServerMetricService_GetAllMetrics(t *testing.T) {
 				},
 			}},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository) {
+			behavior: func(s *mock_repository.MockRepository, ctx context.Context) {
 				metrics := model.Metrics{Metric: []model.Metric{
 					{
 						ID:    "testGauge",
@@ -254,7 +267,7 @@ func TestServerMetricService_GetAllMetrics(t *testing.T) {
 						Delta: model.NewCounter(15),
 					},
 				}}
-				s.EXPECT().GetAllMetrics().Return(&metrics, nil)
+				s.EXPECT().GetAllMetrics(ctx).Return(&metrics, nil)
 			},
 		},
 		{
@@ -262,10 +275,11 @@ func TestServerMetricService_GetAllMetrics(t *testing.T) {
 			fields: fields{
 				config: &config.ServerConfig{},
 			},
+			args:    args{ctx: context.Background()},
 			want:    nil,
 			wantErr: true,
-			behavior: func(s *mock_repository.MockRepository) {
-				s.EXPECT().GetAllMetrics().Return(nil, errors2.New("testError"))
+			behavior: func(s *mock_repository.MockRepository, ctx context.Context) {
+				s.EXPECT().GetAllMetrics(ctx).Return(nil, errors2.New("testError"))
 			},
 		},
 	}
@@ -274,13 +288,13 @@ func TestServerMetricService_GetAllMetrics(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			tt.behavior(repo)
+			tt.behavior(repo, tt.args.ctx)
 
 			s := &ServerMetricService{
 				config: tt.fields.config,
 				repo:   repo,
 			}
-			got, err := s.GetAllMetrics()
+			got, err := s.GetAllMetrics(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAllMetrics() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -293,12 +307,13 @@ func TestServerMetricService_GetAllMetrics(t *testing.T) {
 }
 
 func TestServerMetricService_GetMetricByKey(t *testing.T) {
-	type mockBehavior func(s *mock_repository.MockRepository, name string, metric *model.Metric)
+	type mockBehavior func(s *mock_repository.MockRepository, name string, metric *model.Metric, ctx context.Context)
 	type fields struct {
 		config *config.ServerConfig
 	}
 	type args struct {
 		name string
+		ctx  context.Context
 	}
 	tests := []struct {
 		name        string
@@ -316,6 +331,7 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 			},
 			args: args{
 				name: "testCounter",
+				ctx:  context.Background(),
 			},
 			want: &model.Metric{
 				ID:    "testCounter",
@@ -324,8 +340,8 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 				Value: nil,
 			},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric) {
-				s.EXPECT().GetMetricByKey(name).Return(metric, nil)
+			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric, ctx context.Context) {
+				s.EXPECT().GetMetricByKey(name, ctx).Return(metric, nil)
 			},
 		},
 		{
@@ -335,6 +351,7 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 			},
 			args: args{
 				name: "testGauge",
+				ctx:  context.Background(),
 			},
 			want: &model.Metric{
 				ID:    "testGauge",
@@ -343,8 +360,8 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 				Value: model.NewGauge(12.5),
 			},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric) {
-				s.EXPECT().GetMetricByKey(name).Return(metric, nil)
+			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric, ctx context.Context) {
+				s.EXPECT().GetMetricByKey(name, ctx).Return(metric, nil)
 			},
 		},
 		{
@@ -354,12 +371,13 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 			},
 			args: args{
 				name: "testGauge",
+				ctx:  context.Background(),
 			},
 			want:        nil,
 			wantErr:     true,
 			wantErrType: errors.MetricNotFoundError{MetricName: "testGauge"},
-			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric) {
-				s.EXPECT().GetMetricByKey(name).Return(nil, errors2.New("testError"))
+			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric, ctx context.Context) {
+				s.EXPECT().GetMetricByKey(name, ctx).Return(nil, errors2.New("testError"))
 			},
 		},
 	}
@@ -368,13 +386,13 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			tt.behavior(repo, tt.args.name, tt.want)
+			tt.behavior(repo, tt.args.name, tt.want, tt.args.ctx)
 
 			s := &ServerMetricService{
 				config: tt.fields.config,
 				repo:   repo,
 			}
-			got, err := s.GetMetricByKey(tt.args.name)
+			got, err := s.GetMetricByKey(tt.args.name, tt.args.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetMetricByKey() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -438,3 +456,32 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 //		})
 //	}
 //}
+
+func TestNewServerMetricService(t *testing.T) {
+	type args struct {
+		cnf  *config.ServerConfig
+		repo repository.Repository
+	}
+	tests := []struct {
+		name string
+		args args
+		want *ServerMetricService
+	}{
+		{
+			name: "should return ServerMetricService",
+			args: args{
+				cnf:  &config.ServerConfig{},
+				repo: &repository.PostgresRepo{},
+			},
+			want: &ServerMetricService{
+				config: &config.ServerConfig{},
+				repo:   &repository.PostgresRepo{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, NewServerMetricService(tt.args.cnf, tt.args.repo), "NewServerMetricService(%v, %v)", tt.args.cnf, tt.args.repo)
+		})
+	}
+}

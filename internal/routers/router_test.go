@@ -109,18 +109,6 @@ func TestRouter(t *testing.T) {
 				headers:    map[string]string{},
 			},
 		},
-		//{
-		//	name:      "should return 400 when no Content-Type header supplied",
-		//	urlToCall: "/update/counter/NewCounterMetric/1",
-		//	method:    http.MethodPost,
-		//	headers:   map[string]string{},
-		//	want: want{
-		//		statusCode: 400,
-		//		headers: map[string]string{
-		//			"Content-Type": "text/plain",
-		//		},
-		//	},
-		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
