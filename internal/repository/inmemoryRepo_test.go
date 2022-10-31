@@ -32,9 +32,11 @@ func Test_mapStorage_GetAllMetrics(t *testing.T) {
 		GaugeMetric   map[string]model.Gauge
 		CounterMetric map[string]model.Counter
 	}
+
 	type args struct {
 		ctx context.Context
 	}
+  
 	tests := []struct {
 		name    string
 		fields  fields
