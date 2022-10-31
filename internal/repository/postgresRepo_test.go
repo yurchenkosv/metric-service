@@ -24,12 +24,13 @@ func initContainers(t *testing.T, ctx context.Context) testcontainers.Container 
 
 	req := testcontainers.ContainerRequest{
 		Image:        "postgres:12",
-		ExposedPorts: []string{"5432/tcp"},
+		ExposedPorts: []string{port.Port() + "/tcp"},
 		Env: map[string]string{
 			"POSTGRES_PASSWORD": "postgres",
 			"POSTGRES_DB":       "metric_service",
 		},
 		WaitingFor: wait.ForListeningPort(port),
+		AutoRemove: true,
 	}
 	postgres, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
@@ -52,7 +53,7 @@ func TestNewPostgresRepo(t *testing.T) {
 		want   *PostgresRepo
 	}{
 		{
-			name:   "sould create connection to database and return repo",
+			name:   "should create connection to database and return repo",
 			args:   args{},
 			before: initContainers,
 			want:   &PostgresRepo{},
@@ -77,6 +78,9 @@ func TestNewPostgresRepo(t *testing.T) {
 func TestPostgresRepo_GetAllMetrics(t *testing.T) {
 	type fields struct {
 		DBURI string
+	}
+	type args struct {
+		ctx context.Context
 	}
 	tests := []struct {
 		name            string
@@ -137,7 +141,7 @@ func TestPostgresRepo_GetAllMetrics(t *testing.T) {
 			repo.Migrate("../../db/migrations")
 			tt.beforeCondition(repo.Conn)
 
-			got, err := repo.GetAllMetrics()
+			got, err := repo.GetAllMetrics(ctx)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAllMetrics() error = %v, wantErr %v", err, tt.wantErr)
@@ -216,7 +220,7 @@ func TestPostgresRepo_GetMetricByKey(t *testing.T) {
 			repo.Migrate("../../db/migrations")
 			tt.beforeCondition(repo.Conn)
 
-			got, err := repo.GetMetricByKey(tt.args.name)
+			got, err := repo.GetMetricByKey(tt.args.name, ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetMetricByKey() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -258,7 +262,7 @@ func TestPostgresRepo_Ping(t *testing.T) {
 			}
 			tt.fields.DBURI = fmt.Sprintf("postgresql://postgres:postgres@%s/metric_service?sslmode=disable", endpoint)
 			repo := NewPostgresRepo(tt.fields.DBURI)
-			if err := repo.Ping(); (err != nil) != tt.wantErr {
+			if err := repo.Ping(ctx); (err != nil) != tt.wantErr {
 				t.Errorf("Ping() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -317,7 +321,7 @@ func TestPostgresRepo_SaveCounter(t *testing.T) {
 			repo := NewPostgresRepo(tt.fields.DBURI)
 			repo.Migrate("../../db/migrations")
 
-			if err := repo.SaveCounter(tt.args.name, tt.args.counter); (err != nil) != tt.wantErr {
+			if err := repo.SaveCounter(tt.args.name, tt.args.counter, ctx); (err != nil) != tt.wantErr {
 				t.Errorf("SaveCounter() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if counter := (*tt.after(repo.Conn, tt.args.name)); counter != tt.args.counter {
@@ -381,7 +385,7 @@ func TestPostgresRepo_SaveGauge(t *testing.T) {
 			repo := NewPostgresRepo(tt.fields.DBURI)
 			repo.Migrate("../../db/migrations")
 
-			if err := repo.SaveGauge(tt.args.name, tt.args.gauge); (err != nil) != tt.wantErr {
+			if err := repo.SaveGauge(tt.args.name, tt.args.gauge, ctx); (err != nil) != tt.wantErr {
 				t.Errorf("SaveGauge() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if gauge := (*tt.after(repo.Conn, tt.args.name)); gauge != tt.args.gauge {
@@ -486,7 +490,7 @@ func TestPostgresRepo_SaveMetricsBatch(t *testing.T) {
 			tt.fields.DBURI = fmt.Sprintf("postgresql://postgres:postgres@%s/metric_service?sslmode=disable", endpoint)
 			repo := NewPostgresRepo(tt.fields.DBURI)
 			repo.Migrate("../../db/migrations")
-			if err := repo.SaveMetricsBatch(tt.args.metrics); (err != nil) != tt.wantErr {
+			if err := repo.SaveMetricsBatch(tt.args.metrics, ctx); (err != nil) != tt.wantErr {
 				t.Errorf("SaveMetricsBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 

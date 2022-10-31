@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -111,7 +112,7 @@ func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "Should sucess add counter to metrics",
+			name: "Should success add counter to metrics",
 			fields: fields{
 				config: &config.AgentConfig{},
 				client: clients.MetricServerClient{},
@@ -192,6 +193,32 @@ func TestNewAgentMetricService(t *testing.T) {
 				client: tt.args.client,
 			}
 			assert.IsType(t, tt.want, NewAgentMetricService(tt.args.config, tt.args.client), "NewAgentMetricService(%v %v)", tt.args.config, tt.args.client)
+		})
+	}
+}
+
+func TestAgentMetricService_Push(t *testing.T) {
+	type fields struct {
+		config  *config.AgentConfig
+		client  clients.MetricsClient
+		metrics *model.Metrics
+		mutex   sync.Mutex
+	}
+	tests := []struct {
+		name   string
+		fields fields
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &AgentMetricService{
+				config:  tt.fields.config,
+				client:  tt.fields.client,
+				metrics: tt.fields.metrics,
+				mutex:   tt.fields.mutex,
+			}
+			s.Push()
 		})
 	}
 }

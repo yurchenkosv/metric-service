@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -31,10 +32,14 @@ func Test_mapStorage_GetAllMetrics(t *testing.T) {
 		GaugeMetric   map[string]model.Gauge
 		CounterMetric map[string]model.Counter
 	}
+	type args struct {
+		ctx context.Context
+	}
 	tests := []struct {
 		name    string
 		fields  fields
 		want    *model.Metrics
+		args    args
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -47,6 +52,7 @@ func Test_mapStorage_GetAllMetrics(t *testing.T) {
 					"RandomCounter": model.Counter(100),
 				},
 			},
+			args: args{ctx: context.Background()},
 			want: &model.Metrics{Metric: []model.Metric{
 				{
 					ID:    "RandomCounter",
@@ -68,7 +74,7 @@ func Test_mapStorage_GetAllMetrics(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			got, err := m.GetAllMetrics()
+			got, err := m.GetAllMetrics(tt.args.ctx)
 			if !tt.wantErr(t, err, "GetAllMetrics()") {
 				return
 			}
@@ -84,6 +90,7 @@ func Test_mapStorage_GetMetricByKey(t *testing.T) {
 	}
 	type args struct {
 		key string
+		ctx context.Context
 	}
 	tests := []struct {
 		name    string
@@ -102,6 +109,7 @@ func Test_mapStorage_GetMetricByKey(t *testing.T) {
 			},
 			args: args{
 				key: "RandomCounter",
+				ctx: context.Background(),
 			},
 			want: &model.Metric{
 				ID:    "RandomCounter",
@@ -120,6 +128,7 @@ func Test_mapStorage_GetMetricByKey(t *testing.T) {
 			},
 			args: args{
 				key: "RandomGauge",
+				ctx: context.Background(),
 			},
 			want: &model.Metric{
 				ID:    "RandomGauge",
@@ -135,7 +144,7 @@ func Test_mapStorage_GetMetricByKey(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			got, err := m.GetMetricByKey(tt.args.key)
+			got, err := m.GetMetricByKey(tt.args.key, tt.args.ctx)
 			if !tt.wantErr(t, err, fmt.Sprintf("GetMetricByKey(%v)", tt.args.key)) {
 				return
 			}
@@ -184,9 +193,13 @@ func Test_mapStorage_Ping(t *testing.T) {
 		GaugeMetric   map[string]model.Gauge
 		CounterMetric map[string]model.Counter
 	}
+	type args struct {
+		ctx context.Context
+	}
 	tests := []struct {
 		name    string
 		fields  fields
+		args    args
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
@@ -195,6 +208,7 @@ func Test_mapStorage_Ping(t *testing.T) {
 				GaugeMetric:   nil,
 				CounterMetric: nil,
 			},
+			args:    args{ctx: context.Background()},
 			wantErr: assert.NoError,
 		},
 	}
@@ -204,7 +218,7 @@ func Test_mapStorage_Ping(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			tt.wantErr(t, m.Ping(), "Ping()")
+			tt.wantErr(t, m.Ping(tt.args.ctx), "Ping()")
 		})
 	}
 }
@@ -217,6 +231,7 @@ func Test_mapStorage_SaveCounter(t *testing.T) {
 	type args struct {
 		name string
 		val  model.Counter
+		ctx  context.Context
 	}
 	tests := []struct {
 		name    string
@@ -234,6 +249,7 @@ func Test_mapStorage_SaveCounter(t *testing.T) {
 			args: args{
 				name: "RandomCounter",
 				val:  212,
+				ctx:  context.Background(),
 			},
 			want:    model.Counter(212),
 			wantErr: assert.NoError,
@@ -246,7 +262,7 @@ func Test_mapStorage_SaveCounter(t *testing.T) {
 				CounterMetric: tt.fields.CounterMetric,
 			}
 
-			tt.wantErr(t, m.SaveCounter(tt.args.name, tt.args.val), fmt.Sprintf("SaveCounter(%v, %v)", tt.args.name, tt.args.val))
+			tt.wantErr(t, m.SaveCounter(tt.args.name, tt.args.val, tt.args.ctx), fmt.Sprintf("SaveCounter(%v, %v)", tt.args.name, tt.args.val))
 			if val, ok := m.CounterMetric[tt.name]; ok {
 				got := val
 				assert.Equalf(t, tt.want, got, "GetMetricByKey(%v)", tt.args.name)
@@ -263,6 +279,7 @@ func Test_mapStorage_SaveGauge(t *testing.T) {
 	type args struct {
 		name string
 		val  model.Gauge
+		ctx  context.Context
 	}
 	tests := []struct {
 		name    string
@@ -280,6 +297,7 @@ func Test_mapStorage_SaveGauge(t *testing.T) {
 			args: args{
 				name: "RandomGauge",
 				val:  500.24,
+				ctx:  context.Background(),
 			},
 			wantErr: assert.NoError,
 			want:    model.Gauge(500.24),
@@ -291,7 +309,7 @@ func Test_mapStorage_SaveGauge(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			tt.wantErr(t, m.SaveGauge(tt.args.name, tt.args.val), fmt.Sprintf("SaveGauge(%v, %v)", tt.args.name, tt.args.val))
+			tt.wantErr(t, m.SaveGauge(tt.args.name, tt.args.val, tt.args.ctx), fmt.Sprintf("SaveGauge(%v, %v)", tt.args.name, tt.args.val))
 			if val, ok := m.GaugeMetric[tt.name]; ok {
 				got := val
 				assert.Equalf(t, tt.want, got, "GetMetricByKey(%v)", tt.args.name)
@@ -307,6 +325,7 @@ func Test_mapStorage_SaveMetricsBatch(t *testing.T) {
 	}
 	type args struct {
 		metrics []model.Metric
+		ctx     context.Context
 	}
 	tests := []struct {
 		name    string
@@ -322,6 +341,7 @@ func Test_mapStorage_SaveMetricsBatch(t *testing.T) {
 				CounterMetric: map[string]model.Counter{},
 			},
 			args: args{
+				ctx: context.Background(),
 				metrics: []model.Metric{
 					{
 						ID:    "RandomCounter",
@@ -356,8 +376,8 @@ func Test_mapStorage_SaveMetricsBatch(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			tt.wantErr(t, m.SaveMetricsBatch(tt.args.metrics), fmt.Sprintf("SaveMetricsBatch(%v)", tt.args.metrics))
-			got, _ := m.GetAllMetrics()
+			tt.wantErr(t, m.SaveMetricsBatch(tt.args.metrics, tt.args.ctx), fmt.Sprintf("SaveMetricsBatch(%v)", tt.args.metrics))
+			got, _ := m.GetAllMetrics(tt.args.ctx)
 			assert.Equalf(t, tt.want, got, "GetAllMetrics()")
 		})
 	}
