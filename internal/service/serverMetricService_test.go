@@ -45,7 +45,7 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 			},
 			wantErr: false,
 			behavior: func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context) {
-				s.EXPECT().SaveCounter(metric.ID, *metric.Delta, ctx).Return(nil)
+				s.EXPECT().SaveCounter(ctx, metric.ID, *metric.Delta).Return(nil)
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 			},
 			wantErr: false,
 			behavior: func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context) {
-				s.EXPECT().SaveGauge(metric.ID, *metric.Value, ctx).Return(nil)
+				s.EXPECT().SaveGauge(ctx, metric.ID, *metric.Value).Return(nil)
 			},
 		},
 	}
@@ -75,7 +75,7 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 				config: tt.fields.config,
 				repo:   repo,
 			}
-			if err := s.AddMetric(tt.args.metric, tt.args.ctx); (err != nil) != tt.wantErr {
+			if err := s.AddMetric(tt.args.ctx, tt.args.metric); (err != nil) != tt.wantErr {
 				t.Errorf("AddMetric() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -118,7 +118,7 @@ func TestServerMetricService_AddMetricBatch(t *testing.T) {
 			},
 			wantErr: false,
 			behavior: func(s *mock_repository.MockRepository, metrics model.Metrics, ctx context.Context) {
-				s.EXPECT().SaveMetricsBatch(metrics.Metric, ctx).Return(nil)
+				s.EXPECT().SaveMetricsBatch(ctx, metrics.Metric).Return(nil)
 			},
 		},
 	}
@@ -132,7 +132,7 @@ func TestServerMetricService_AddMetricBatch(t *testing.T) {
 				config: tt.fields.config,
 				repo:   repo,
 			}
-			if err := s.AddMetricBatch(tt.args.metrics, tt.args.ctx); (err != nil) != tt.wantErr {
+			if err := s.AddMetricBatch(tt.args.ctx, tt.args.metrics); (err != nil) != tt.wantErr {
 				t.Errorf("AddMetricBatch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -341,7 +341,7 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 			},
 			wantErr: false,
 			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric, ctx context.Context) {
-				s.EXPECT().GetMetricByKey(name, ctx).Return(metric, nil)
+				s.EXPECT().GetMetricByKey(ctx, name).Return(metric, nil)
 			},
 		},
 		{
@@ -361,7 +361,7 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 			},
 			wantErr: false,
 			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric, ctx context.Context) {
-				s.EXPECT().GetMetricByKey(name, ctx).Return(metric, nil)
+				s.EXPECT().GetMetricByKey(ctx, name).Return(metric, nil)
 			},
 		},
 		{
@@ -377,7 +377,7 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 			wantErr:     true,
 			wantErrType: errors.MetricNotFoundError{MetricName: "testGauge"},
 			behavior: func(s *mock_repository.MockRepository, name string, metric *model.Metric, ctx context.Context) {
-				s.EXPECT().GetMetricByKey(name, ctx).Return(nil, errors2.New("testError"))
+				s.EXPECT().GetMetricByKey(ctx, name).Return(nil, errors2.New("testError"))
 			},
 		},
 	}
@@ -392,7 +392,7 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 				config: tt.fields.config,
 				repo:   repo,
 			}
-			got, err := s.GetMetricByKey(tt.args.name, tt.args.ctx)
+			got, err := s.GetMetricByKey(tt.args.ctx, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetMetricByKey() error = %v, wantErr %v", err, tt.wantErr)
 				return

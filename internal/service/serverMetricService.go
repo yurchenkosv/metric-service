@@ -43,16 +43,16 @@ func (s ServerMetricService) Shutdown() {
 
 // AddMetric method for saving model.Metric in repository. It can return error if something went wrong.
 // Also, it saves metrics to disk if it is required.
-func (s *ServerMetricService) AddMetric(metric model.Metric, ctx context.Context) error {
+func (s *ServerMetricService) AddMetric(ctx context.Context, metric model.Metric) error {
 	switch metric.MType {
 	case "gauge":
-		err := s.repo.SaveGauge(metric.ID, *metric.Value, ctx)
+		err := s.repo.SaveGauge(ctx, metric.ID, *metric.Value)
 		if err != nil {
 			log.Error(err)
 			return err
 		}
 	case "counter":
-		err := s.repo.SaveCounter(metric.ID, *metric.Delta, ctx)
+		err := s.repo.SaveCounter(ctx, metric.ID, *metric.Delta)
 		if err != nil {
 			log.Error(err)
 			return err
@@ -71,10 +71,10 @@ func (s *ServerMetricService) AddMetric(metric model.Metric, ctx context.Context
 // It can return error if it cannot save metrics for some reason.
 // It calls SaveMetricsBatch repository method to save metrics transactional.
 // Also, it saves metrics to disk if it is required.
-func (s *ServerMetricService) AddMetricBatch(metrics model.Metrics, ctx context.Context) error {
+func (s *ServerMetricService) AddMetricBatch(ctx context.Context, metrics model.Metrics) error {
 	var err error
 
-	err = s.repo.SaveMetricsBatch(metrics.Metric, ctx)
+	err = s.repo.SaveMetricsBatch(ctx, metrics.Metric)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -89,8 +89,8 @@ func (s *ServerMetricService) AddMetricBatch(metrics model.Metrics, ctx context.
 
 // GetMetricByKey method to get pointer to model.Metric from repository.
 // If nothing could be found, then MetricNotFoundError returns.
-func (s *ServerMetricService) GetMetricByKey(name string, ctx context.Context) (*model.Metric, error) {
-	metric, err := s.repo.GetMetricByKey(name, ctx)
+func (s *ServerMetricService) GetMetricByKey(ctx context.Context, name string) (*model.Metric, error) {
+	metric, err := s.repo.GetMetricByKey(ctx, name)
 	if err != nil {
 		return nil, &errors.MetricNotFoundError{MetricName: name}
 	}
@@ -176,7 +176,7 @@ func (s *ServerMetricService) LoadMetricsFromDisk() error {
 		return nil
 	}
 
-	err = s.AddMetricBatch(metrics, cxt)
+	err = s.AddMetricBatch(cxt, metrics)
 	if err != nil {
 		return err
 	}

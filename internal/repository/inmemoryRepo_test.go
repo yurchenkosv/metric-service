@@ -36,7 +36,7 @@ func Test_mapStorage_GetAllMetrics(t *testing.T) {
 	type args struct {
 		ctx context.Context
 	}
-  
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -146,7 +146,7 @@ func Test_mapStorage_GetMetricByKey(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			got, err := m.GetMetricByKey(tt.args.key, tt.args.ctx)
+			got, err := m.GetMetricByKey(tt.args.ctx, tt.args.key)
 			if !tt.wantErr(t, err, fmt.Sprintf("GetMetricByKey(%v)", tt.args.key)) {
 				return
 			}
@@ -264,7 +264,7 @@ func Test_mapStorage_SaveCounter(t *testing.T) {
 				CounterMetric: tt.fields.CounterMetric,
 			}
 
-			tt.wantErr(t, m.SaveCounter(tt.args.name, tt.args.val, tt.args.ctx), fmt.Sprintf("SaveCounter(%v, %v)", tt.args.name, tt.args.val))
+			tt.wantErr(t, m.SaveCounter(tt.args.ctx, tt.args.name, tt.args.val), fmt.Sprintf("SaveCounter(%v, %v)", tt.args.name, tt.args.val))
 			if val, ok := m.CounterMetric[tt.name]; ok {
 				got := val
 				assert.Equalf(t, tt.want, got, "GetMetricByKey(%v)", tt.args.name)
@@ -311,7 +311,7 @@ func Test_mapStorage_SaveGauge(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			tt.wantErr(t, m.SaveGauge(tt.args.name, tt.args.val, tt.args.ctx), fmt.Sprintf("SaveGauge(%v, %v)", tt.args.name, tt.args.val))
+			tt.wantErr(t, m.SaveGauge(tt.args.ctx, tt.args.name, tt.args.val), fmt.Sprintf("SaveGauge(%v, %v)", tt.args.name, tt.args.val))
 			if val, ok := m.GaugeMetric[tt.name]; ok {
 				got := val
 				assert.Equalf(t, tt.want, got, "GetMetricByKey(%v)", tt.args.name)
@@ -378,7 +378,7 @@ func Test_mapStorage_SaveMetricsBatch(t *testing.T) {
 				GaugeMetric:   tt.fields.GaugeMetric,
 				CounterMetric: tt.fields.CounterMetric,
 			}
-			tt.wantErr(t, m.SaveMetricsBatch(tt.args.metrics, tt.args.ctx), fmt.Sprintf("SaveMetricsBatch(%v)", tt.args.metrics))
+			tt.wantErr(t, m.SaveMetricsBatch(tt.args.ctx, tt.args.metrics), fmt.Sprintf("SaveMetricsBatch(%v)", tt.args.metrics))
 			got, _ := m.GetAllMetrics(tt.args.ctx)
 			assert.Equalf(t, tt.want, got, "GetAllMetrics()")
 		})

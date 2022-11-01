@@ -10,16 +10,16 @@ import (
 // It also provides contract to change data storage level of application.
 type Repository interface {
 	// SaveCounter for  saving model.Counter in storage.
-	SaveCounter(string, model.Counter, context.Context) error
+	SaveCounter(context.Context, string, model.Counter) error
 
 	// SaveGauge for saving model.Gauge in storage.
-	SaveGauge(string, model.Gauge, context.Context) error
+	SaveGauge(context.Context, string, model.Gauge) error
 
 	// GetMetricByKey for getting pointer to model.Metric from string key.
-	GetMetricByKey(string, context.Context) (*model.Metric, error)
+	GetMetricByKey(context.Context, string) (*model.Metric, error)
 
 	// SaveMetricsBatch for saving slice of model.Metric in repository.
-	SaveMetricsBatch([]model.Metric, context.Context) error
+	SaveMetricsBatch(context.Context, []model.Metric) error
 
 	// GetAllMetrics for getting pointer to model.Metrics with all metrics, stored in repository
 	GetAllMetrics(ctx context.Context) (*model.Metrics, error)

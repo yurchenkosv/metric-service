@@ -58,7 +58,7 @@ func (repo *PostgresRepo) Shutdown() {
 
 // SaveCounter saves in database counter metric.
 // When conflict occurs, query updates current value of metric
-func (repo *PostgresRepo) SaveCounter(name string, counter model.Counter, ctx context.Context) error {
+func (repo *PostgresRepo) SaveCounter(ctx context.Context, name string, counter model.Counter) error {
 	query := `
 		INSERT INTO metrics(
 		metric_id,
@@ -79,7 +79,7 @@ func (repo *PostgresRepo) SaveCounter(name string, counter model.Counter, ctx co
 
 // SaveGauge saves in database gauge metric.
 // When conflict occurs, query updates current value of metric
-func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge, ctx context.Context) error {
+func (repo *PostgresRepo) SaveGauge(ctx context.Context, name string, gauge model.Gauge) error {
 	query := `
 		INSERT INTO metrics(
 			metric_id,
@@ -100,7 +100,7 @@ func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge, ctx context.
 
 // GetMetricByKey selects all data in DB by key provided by name string parameter.
 // Returns model.Metric as single value because of metric key is unic
-func (repo *PostgresRepo) GetMetricByKey(name string, ctx context.Context) (*model.Metric, error) {
+func (repo *PostgresRepo) GetMetricByKey(ctx context.Context, name string) (*model.Metric, error) {
 	var metric model.Metric
 	query := `
 		SELECT metric_id, metric_type, metric_delta, metric_value
@@ -163,7 +163,7 @@ func (repo *PostgresRepo) Ping(ctx context.Context) error {
 
 // SaveMetricsBatch saves slice of model.Metric in DB in one transaction.
 // When error occurs, transaction rollbacks.
-func (repo *PostgresRepo) SaveMetricsBatch(metrics []model.Metric, ctx context.Context) error {
+func (repo *PostgresRepo) SaveMetricsBatch(ctx context.Context, metrics []model.Metric) error {
 	tx, err := repo.Conn.Begin()
 	if err != nil {
 		log.Error(err)

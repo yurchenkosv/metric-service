@@ -51,7 +51,7 @@ func (mr *MockRepositoryMockRecorder) GetAllMetrics(ctx interface{}) *gomock.Cal
 }
 
 // GetMetricByKey mocks base method.
-func (m *MockRepository) GetMetricByKey(arg0 string, arg1 context.Context) (*model.Metric, error) {
+func (m *MockRepository) GetMetricByKey(arg0 context.Context, arg1 string) (*model.Metric, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricByKey", arg0, arg1)
 	ret0, _ := ret[0].(*model.Metric)
@@ -92,7 +92,7 @@ func (mr *MockRepositoryMockRecorder) Ping(ctx interface{}) *gomock.Call {
 }
 
 // SaveCounter mocks base method.
-func (m *MockRepository) SaveCounter(arg0 string, arg1 model.Counter, arg2 context.Context) error {
+func (m *MockRepository) SaveCounter(arg0 context.Context, arg1 string, arg2 model.Counter) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveCounter", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -106,7 +106,7 @@ func (mr *MockRepositoryMockRecorder) SaveCounter(arg0, arg1, arg2 interface{}) 
 }
 
 // SaveGauge mocks base method.
-func (m *MockRepository) SaveGauge(arg0 string, arg1 model.Gauge, arg2 context.Context) error {
+func (m *MockRepository) SaveGauge(arg0 context.Context, arg1 string, arg2 model.Gauge) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveGauge", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -120,7 +120,7 @@ func (mr *MockRepositoryMockRecorder) SaveGauge(arg0, arg1, arg2 interface{}) *g
 }
 
 // SaveMetricsBatch mocks base method.
-func (m *MockRepository) SaveMetricsBatch(arg0 []model.Metric, arg1 context.Context) error {
+func (m *MockRepository) SaveMetricsBatch(arg0 context.Context, arg1 []model.Metric) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMetricsBatch", arg0, arg1)
 	ret0, _ := ret[0].(error)
