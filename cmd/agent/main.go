@@ -13,10 +13,14 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/clients"
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/service"
+	"github.com/yurchenkosv/metric-service/pkg/finalizer"
 )
 
 var (
-	cfg = config.AgentConfig{}
+	cfg          = config.AgentConfig{}
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
 )
 
 func init() {
@@ -26,6 +30,9 @@ func init() {
 }
 
 func main() {
+
+	fmt.Printf(" Build version: %s\n Build date: %s\n Build commit: %s\n", buildVersion, buildDate, buildCommit)
+
 	err := cfg.Parse()
 	if err != nil {
 		log.Fatal(err)
@@ -55,9 +62,10 @@ func main() {
 	osSignal := make(chan os.Signal, 3)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 
-	<-osSignal
-	sched.Stop()
-	fmt.Println("Program exit")
-	os.Exit(0)
+	finalizer.Shutdown(func() {
+		<-osSignal
+		sched.Stop()
+		fmt.Println("Program exit")
+	})
 
 }

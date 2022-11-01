@@ -55,7 +55,7 @@ func (h MetricHandler) HandleUpdateMetricJSON(writer http.ResponseWriter, reques
 		return
 	}
 
-	err = h.metricService.AddMetric(metric)
+	err = h.metricService.AddMetric(request.Context(), metric)
 	if err != nil {
 		switch e := err.(type) {
 		case *errors.NoSuchMetricError:
@@ -88,7 +88,7 @@ func (h MetricHandler) HandleUpdatesJSON(writer http.ResponseWriter, request *ht
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 
-	err = h.metricService.AddMetricBatch(model.Metrics{Metric: metrics})
+	err = h.metricService.AddMetricBatch(request.Context(), model.Metrics{Metric: metrics})
 	if err != nil {
 		log.Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -127,7 +127,7 @@ func (h MetricHandler) HandleUpdateMetric(writer http.ResponseWriter, request *h
 	default:
 		writer.WriteHeader(http.StatusNotImplemented)
 	}
-	err := h.metricService.AddMetric(metric)
+	err := h.metricService.AddMetric(request.Context(), metric)
 	if err != nil {
 		switch err.(type) {
 		case *errors.NoSuchMetricError:
@@ -152,7 +152,7 @@ func (h MetricHandler) HandleGetMetric(writer http.ResponseWriter, request *http
 		writer.WriteHeader(http.StatusNotImplemented)
 	}
 
-	metric, err := h.metricService.GetMetricByKey(metricName)
+	metric, err := h.metricService.GetMetricByKey(request.Context(), metricName)
 	if err != nil {
 		switch err.(type) {
 		case *errors.MetricNotFoundError:
@@ -174,7 +174,7 @@ func (h MetricHandler) HandleGetMetric(writer http.ResponseWriter, request *http
 // HandleGetAllMetrics handler for print all metrics.
 // It queries service.ServerMetricService and prints all metrics in text view
 func (h MetricHandler) HandleGetAllMetrics(writer http.ResponseWriter, request *http.Request) {
-	metrics, err := h.metricService.GetAllMetrics()
+	metrics, err := h.metricService.GetAllMetrics(request.Context())
 	if err != nil {
 		log.Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -209,7 +209,7 @@ func (h MetricHandler) HandleGetMetricJSON(writer http.ResponseWriter, request *
 		return
 	}
 
-	foundMetric, err := h.metricService.GetMetricByKey(metric.ID)
+	foundMetric, err := h.metricService.GetMetricByKey(request.Context(), metric.ID)
 	if err != nil {
 		switch err.(type) {
 		case *errors.MetricNotFoundError:

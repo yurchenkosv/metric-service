@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/yurchenkosv/metric-service/internal/errors"
@@ -21,8 +23,12 @@ func NewMapRepo() *mapStorage {
 	}
 }
 
+// Migrate do nothing
+func (m mapStorage) Migrate(path string) {
+}
+
 // SaveCounter just put counter in map
-func (m *mapStorage) SaveCounter(name string, val model.Counter) error {
+func (m *mapStorage) SaveCounter(ctx context.Context, name string, val model.Counter) error {
 	if len(m.CounterMetric) == 0 {
 		m.CounterMetric = make(map[string]model.Counter)
 	}
@@ -30,8 +36,8 @@ func (m *mapStorage) SaveCounter(name string, val model.Counter) error {
 	return nil
 }
 
-// SaveGauge jus put gauge in map
-func (m *mapStorage) SaveGauge(name string, val model.Gauge) error {
+// SaveGauge just put gauge in map
+func (m *mapStorage) SaveGauge(ctx context.Context, name string, val model.Gauge) error {
 	if len(m.GaugeMetric) == 0 {
 		m.GaugeMetric = make(map[string]model.Gauge)
 	}
@@ -40,7 +46,7 @@ func (m *mapStorage) SaveGauge(name string, val model.Gauge) error {
 }
 
 // GetMetricByKey trying to find key in map and if finds - return pointer to model.Metric with metric by key.
-func (m *mapStorage) GetMetricByKey(key string) (*model.Metric, error) {
+func (m *mapStorage) GetMetricByKey(ctx context.Context, key string) (*model.Metric, error) {
 	var metric model.Metric
 	if val, ok := m.CounterMetric[key]; ok {
 		metric.ID = key
@@ -50,7 +56,7 @@ func (m *mapStorage) GetMetricByKey(key string) (*model.Metric, error) {
 	}
 	if val, ok := m.GaugeMetric[key]; ok {
 		metric.ID = key
-		metric.MType = "counter"
+		metric.MType = "gauge"
 		metric.Value = &val
 		return &metric, nil
 	}
@@ -58,7 +64,7 @@ func (m *mapStorage) GetMetricByKey(key string) (*model.Metric, error) {
 }
 
 // GetAllMetrics iterates over two maps and put all metrics together and returns pointer to model.Metrics.
-func (m *mapStorage) GetAllMetrics() (*model.Metrics, error) {
+func (m *mapStorage) GetAllMetrics(ctx context.Context) (*model.Metrics, error) {
 	var metrics model.Metrics
 	for k, v := range m.CounterMetric {
 		metric := model.Metric{
@@ -80,16 +86,16 @@ func (m *mapStorage) GetAllMetrics() (*model.Metrics, error) {
 }
 
 // Ping always returns no error because of maps always available and cannot be unhealthy.
-func (m *mapStorage) Ping() error {
+func (m *mapStorage) Ping(ctx context.Context) error {
 	return nil
 }
 
 // SaveMetricsBatch iterates over model.Metric slice and save metrics to two maps.
-func (m *mapStorage) SaveMetricsBatch(metrics []model.Metric) error {
+func (m *mapStorage) SaveMetricsBatch(ctx context.Context, metrics []model.Metric) error {
 	for i := range metrics {
 		if metrics[i].MType == "counter" {
 			counter := *metrics[i].Delta
-			err := m.SaveCounter(metrics[i].ID, counter)
+			err := m.SaveCounter(ctx, metrics[i].ID, counter)
 			if err != nil {
 				log.Error(err)
 				return err
@@ -97,7 +103,7 @@ func (m *mapStorage) SaveMetricsBatch(metrics []model.Metric) error {
 		}
 		if metrics[i].MType == "gauge" {
 			gauge := *metrics[i].Value
-			err := m.SaveGauge(metrics[i].ID, gauge)
+			err := m.SaveGauge(ctx, metrics[i].ID, gauge)
 			if err != nil {
 				log.Error(err)
 				return err

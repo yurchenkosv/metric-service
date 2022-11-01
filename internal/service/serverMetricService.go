@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -42,16 +43,16 @@ func (s ServerMetricService) Shutdown() {
 
 // AddMetric method for saving model.Metric in repository. It can return error if something went wrong.
 // Also, it saves metrics to disk if it is required.
-func (s *ServerMetricService) AddMetric(metric model.Metric) error {
+func (s *ServerMetricService) AddMetric(ctx context.Context, metric model.Metric) error {
 	switch metric.MType {
 	case "gauge":
-		err := s.repo.SaveGauge(metric.ID, *metric.Value)
+		err := s.repo.SaveGauge(ctx, metric.ID, *metric.Value)
 		if err != nil {
 			log.Error(err)
 			return err
 		}
 	case "counter":
-		err := s.repo.SaveCounter(metric.ID, *metric.Delta)
+		err := s.repo.SaveCounter(ctx, metric.ID, *metric.Delta)
 		if err != nil {
 			log.Error(err)
 			return err
@@ -70,10 +71,10 @@ func (s *ServerMetricService) AddMetric(metric model.Metric) error {
 // It can return error if it cannot save metrics for some reason.
 // It calls SaveMetricsBatch repository method to save metrics transactional.
 // Also, it saves metrics to disk if it is required.
-func (s *ServerMetricService) AddMetricBatch(metrics model.Metrics) error {
+func (s *ServerMetricService) AddMetricBatch(ctx context.Context, metrics model.Metrics) error {
 	var err error
 
-	err = s.repo.SaveMetricsBatch(metrics.Metric)
+	err = s.repo.SaveMetricsBatch(ctx, metrics.Metric)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -88,8 +89,8 @@ func (s *ServerMetricService) AddMetricBatch(metrics model.Metrics) error {
 
 // GetMetricByKey method to get pointer to model.Metric from repository.
 // If nothing could be found, then MetricNotFoundError returns.
-func (s *ServerMetricService) GetMetricByKey(name string) (*model.Metric, error) {
-	metric, err := s.repo.GetMetricByKey(name)
+func (s *ServerMetricService) GetMetricByKey(ctx context.Context, name string) (*model.Metric, error) {
+	metric, err := s.repo.GetMetricByKey(ctx, name)
 	if err != nil {
 		return nil, &errors.MetricNotFoundError{MetricName: name}
 	}
@@ -97,8 +98,8 @@ func (s *ServerMetricService) GetMetricByKey(name string) (*model.Metric, error)
 }
 
 // GetAllMetrics method to get pointer to model.Metrics with all metrics in repository.
-func (s *ServerMetricService) GetAllMetrics() (*model.Metrics, error) {
-	metrics, err := s.repo.GetAllMetrics()
+func (s *ServerMetricService) GetAllMetrics(ctx context.Context) (*model.Metrics, error) {
+	metrics, err := s.repo.GetAllMetrics(ctx)
 	if err != nil {
 		log.Error("error getting metrics", err)
 		return nil, err
@@ -119,6 +120,7 @@ func (s *ServerMetricService) CreateSignedHash(msg string) (string, error) {
 // It gets all metrics from repository, then marshall it to JSON and write to file.
 func (s *ServerMetricService) SaveMetricsToDisk() error {
 	var mutex sync.Mutex
+	ctx := context.Background()
 	if s.config.StoreFile == "" {
 		return nil
 	}
@@ -132,7 +134,7 @@ func (s *ServerMetricService) SaveMetricsToDisk() error {
 		log.Fatal(err)
 	}
 
-	metrics, err := s.GetAllMetrics()
+	metrics, err := s.GetAllMetrics(ctx)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -159,6 +161,7 @@ func (s *ServerMetricService) SaveMetricsToDisk() error {
 // It reads Config.File, unmarshalls and then load model.Metrics to repository
 func (s *ServerMetricService) LoadMetricsFromDisk() error {
 	fileLocation := s.config.StoreFile
+	cxt := context.Background()
 
 	data, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
@@ -173,7 +176,7 @@ func (s *ServerMetricService) LoadMetricsFromDisk() error {
 		return nil
 	}
 
-	err = s.AddMetricBatch(metrics)
+	err = s.AddMetricBatch(cxt, metrics)
 	if err != nil {
 		return err
 	}

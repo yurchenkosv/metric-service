@@ -1,6 +1,12 @@
 package repository
 
 import (
+	"context"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/jackc/pgx/v4"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 
@@ -28,6 +34,21 @@ func NewPostgresRepo(dbURI string) *PostgresRepo {
 	}
 }
 
+// Migrate executes migrations to set database to initial state
+func (repo *PostgresRepo) Migrate(migrationsPath string) {
+	m, err := migrate.New(
+		"file://"+migrationsPath,
+		repo.DBURI)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := m.Up(); err != nil {
+		if err != migrate.ErrNoChange {
+			log.Fatal(err)
+		}
+	}
+}
+
 // Shutdown made to drop idle connections, wait current connections successfully done.
 // Then connection to postgres instance will be terminated.
 func (repo *PostgresRepo) Shutdown() {
@@ -37,7 +58,7 @@ func (repo *PostgresRepo) Shutdown() {
 
 // SaveCounter saves in database counter metric.
 // When conflict occurs, query updates current value of metric
-func (repo *PostgresRepo) SaveCounter(name string, counter model.Counter) error {
+func (repo *PostgresRepo) SaveCounter(ctx context.Context, name string, counter model.Counter) error {
 	query := `
 		INSERT INTO metrics(
 		metric_id,
@@ -48,7 +69,7 @@ func (repo *PostgresRepo) SaveCounter(name string, counter model.Counter) error 
 		ON CONFLICT (metric_id) DO UPDATE
 		SET metric_delta=metrics.metric_delta+$3;
 	`
-	_, err := repo.Conn.Exec(query, name, "counter", int(counter))
+	_, err := repo.Conn.ExecContext(ctx, query, name, "counter", int(counter))
 	if err != nil {
 		log.Error(err)
 		return err
@@ -58,7 +79,7 @@ func (repo *PostgresRepo) SaveCounter(name string, counter model.Counter) error 
 
 // SaveGauge saves in database gauge metric.
 // When conflict occurs, query updates current value of metric
-func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge) error {
+func (repo *PostgresRepo) SaveGauge(ctx context.Context, name string, gauge model.Gauge) error {
 	query := `
 		INSERT INTO metrics(
 			metric_id,
@@ -69,7 +90,7 @@ func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge) error {
 		ON CONFLICT (metric_id) DO UPDATE
 		SET metric_value=$3;
 	`
-	_, err := repo.Conn.Exec(query, name, "gauge", float64(gauge))
+	_, err := repo.Conn.ExecContext(ctx, query, name, "gauge", float64(gauge))
 	if err != nil {
 		log.Error(err)
 		return err
@@ -79,14 +100,14 @@ func (repo *PostgresRepo) SaveGauge(name string, gauge model.Gauge) error {
 
 // GetMetricByKey selects all data in DB by key provided by name string parameter.
 // Returns model.Metric as single value because of metric key is unic
-func (repo *PostgresRepo) GetMetricByKey(name string) (*model.Metric, error) {
+func (repo *PostgresRepo) GetMetricByKey(ctx context.Context, name string) (*model.Metric, error) {
 	var metric model.Metric
 	query := `
 		SELECT metric_id, metric_type, metric_delta, metric_value
 		FROM metrics 
 		WHERE metric_id = $1
 		`
-	err := repo.Conn.QueryRow(query, name).
+	err := repo.Conn.QueryRowContext(ctx, query, name).
 		Scan(&metric.ID,
 			&metric.MType,
 			&metric.Delta,
@@ -98,12 +119,12 @@ func (repo *PostgresRepo) GetMetricByKey(name string) (*model.Metric, error) {
 }
 
 // GetAllMetrics selects all metrics in DB and returns it as pointer to model.Metrics
-func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
+func (repo *PostgresRepo) GetAllMetrics(ctx context.Context) (*model.Metrics, error) {
 	var metrics model.Metrics
 
-	query := "SELECT metric_id, metric_type, metric_delta, metric_value, hash FROM metrics"
+	query := "SELECT metric_id, metric_type, metric_delta, metric_value FROM metrics"
 
-	result, err := repo.Conn.Query(query)
+	result, err := repo.Conn.QueryContext(ctx, query)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -136,13 +157,13 @@ func (repo *PostgresRepo) GetAllMetrics() (*model.Metrics, error) {
 
 // Ping creates connection to DB and do select on it.
 // When ping unsuccessful error returns. It means that database is unhealthy
-func (repo *PostgresRepo) Ping() error {
-	return repo.Conn.Ping()
+func (repo *PostgresRepo) Ping(ctx context.Context) error {
+	return repo.Conn.PingContext(ctx)
 }
 
 // SaveMetricsBatch saves slice of model.Metric in DB in one transaction.
 // When error occurs, transaction rollbacks.
-func (repo *PostgresRepo) SaveMetricsBatch(metrics []model.Metric) error {
+func (repo *PostgresRepo) SaveMetricsBatch(ctx context.Context, metrics []model.Metric) error {
 	tx, err := repo.Conn.Begin()
 	if err != nil {
 		log.Error(err)
@@ -163,7 +184,8 @@ func (repo *PostgresRepo) SaveMetricsBatch(metrics []model.Metric) error {
 			metric_value=$4,
 			hash=$5;
 		`
-		_, err = tx.Exec(
+		_, err = tx.ExecContext(
+			ctx,
 			query,
 			metrics[i].ID,
 			metrics[i].MType,

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,16 +13,19 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/yurchenkosv/metric-service/internal/config"
-	migration "github.com/yurchenkosv/metric-service/internal/migrate"
 	"github.com/yurchenkosv/metric-service/internal/repository"
 	"github.com/yurchenkosv/metric-service/internal/service"
+	"github.com/yurchenkosv/metric-service/pkg/finalizer"
 
 	"github.com/yurchenkosv/metric-service/internal/routers"
 )
 
 var (
-	cfg  = config.NewServerConfig()
-	repo repository.Repository
+	cfg          = config.NewServerConfig()
+	repo         repository.Repository
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
 )
 
 func init() {
@@ -31,6 +35,9 @@ func init() {
 }
 
 func main() {
+
+	fmt.Printf(" Build version: %s\n Build date: %s\n Build commit: %s\n", buildVersion, buildDate, buildCommit)
+
 	osSignal := make(chan os.Signal, 1)
 	signal.Notify(osSignal, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
 	err := cfg.Parse()
@@ -44,26 +51,26 @@ func main() {
 		}).Info("Starting metric server")
 
 	if cfg.DBDsn != "" {
-		migration.Migrate(cfg.DBDsn)
 		repo = repository.NewPostgresRepo(cfg.DBDsn)
+		repo.Migrate("db/migrations")
 	} else {
 		repo = repository.NewMapRepo()
 	}
 
 	metricService := service.NewServerMetricService(cfg, repo)
 	if cfg.Restore {
-		err := metricService.LoadMetricsFromDisk()
-		if err != nil {
+		err2 := metricService.LoadMetricsFromDisk()
+		if err2 != nil {
 			log.Fatal("cannot read metrics from file")
 		}
 	}
 
 	sched := gocron.NewScheduler(time.UTC)
 	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
-		_, err := sched.Every(cfg.StoreInterval).
+		_, err2 := sched.Every(cfg.StoreInterval).
 			Do(metricService.SaveMetricsToDisk)
-		if err != nil {
-			log.Error("cannot save metrics to disk", err)
+		if err2 != nil {
+			log.Error("cannot save metrics to disk", err2)
 		}
 		sched.StartAsync()
 	}
@@ -83,8 +90,9 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	}
+	finalizer.Shutdown(func() {
+		sched.Stop()
+		metricService.Shutdown()
+	})
 
-	sched.Stop()
-	metricService.Shutdown()
-	os.Exit(0)
 }

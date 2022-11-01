@@ -23,7 +23,7 @@ func NewHealthCheckHandler(svc *service.HealthCheckService) *HealthChecksHandler
 // HandleHealthChecks handler for checking health of application.
 // If application unhealthy it must be restarted by external tools such as SIGINT
 func (h *HealthChecksHandler) HandleHealthChecks(writer http.ResponseWriter, request *http.Request) {
-	err := h.svc.CheckRepoHealth()
+	err := h.svc.CheckRepoHealth(request.Context())
 	if err != nil {
 		log.Error(err)
 		//writer.WriteHeader(http.StatusNotAcceptable)
