@@ -26,6 +26,7 @@ var (
 	buildVersion = "N/A"
 	buildDate    = "N/A"
 	buildCommit  = "N/A"
+	mainContext  = context.Background()
 )
 
 func init() {
@@ -59,7 +60,7 @@ func main() {
 
 	metricService := service.NewServerMetricService(cfg, repo)
 	if cfg.Restore {
-		err2 := metricService.LoadMetricsFromDisk()
+		err2 := metricService.LoadMetricsFromDisk(mainContext)
 		if err2 != nil {
 			log.Fatal("cannot read metrics from file")
 		}
@@ -68,7 +69,7 @@ func main() {
 	sched := gocron.NewScheduler(time.UTC)
 	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 		_, err2 := sched.Every(cfg.StoreInterval).
-			Do(metricService.SaveMetricsToDisk)
+			Do(metricService.SaveMetricsToDisk, mainContext)
 		if err2 != nil {
 			log.Error("cannot save metrics to disk", err2)
 		}
@@ -84,7 +85,7 @@ func main() {
 	<-osSignal
 	log.Warn("shuting down server")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(mainContext, 5*time.Second)
 	defer cancel()
 	err = server.Shutdown(ctx)
 	if err != nil {
