@@ -564,3 +564,43 @@ func TestServerMetricService_SaveMetricsToDisk1(t *testing.T) {
 		})
 	}
 }
+
+func TestServerMetricService_Shutdown(t *testing.T) {
+	type mockBehavior func(s *mock_repository.MockRepository)
+	type fields struct {
+		config            *config.ServerConfig
+		repo              repository.Repository
+		saveMetricsToDisk bool
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		behavior mockBehavior
+	}{
+		{
+			name: "should successfully shutdown service",
+			fields: fields{
+				config:            &config.ServerConfig{},
+				repo:              nil,
+				saveMetricsToDisk: false,
+			},
+			behavior: func(s *mock_repository.MockRepository) {
+				s.EXPECT().Shutdown()
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			repo := mock_repository.NewMockRepository(ctrl)
+			tt.behavior(repo)
+			s := ServerMetricService{
+				config:            tt.fields.config,
+				repo:              repo,
+				saveMetricsToDisk: tt.fields.saveMetricsToDisk,
+			}
+			s.Shutdown()
+		})
+	}
+}
