@@ -17,6 +17,7 @@ const serverDefaultRestoreCondition bool = true
 const serverDefaultHashKey string = ""
 const serverDefaultDBDsn string = ""
 const serverDefaultConfigFilePath string = ""
+const serverDefaultCryptoKeyPath = ""
 
 // ServerConfig struct with fields, useful for configuring metrics server.
 type ServerConfig struct {
@@ -26,6 +27,7 @@ type ServerConfig struct {
 	Restore        bool          `env:"RESTORE" json:"restore"`               // If set to true, read StoreFile to restore metrics state
 	HashKey        string        `env:"KEY" json:"crypto_key"`                // key to create/validate hash
 	DBDsn          string        `env:"DATABASE_DSN" json:"database_dsn"`     // Postgres connection string in DSN format
+	CryptoKey      string        `env:"CRYPTO_KEY"`                           // Path to private cipher key
 	configFilePath string
 }
 
@@ -53,6 +55,9 @@ func (c *ServerConfig) mergeConfigs(s ServerConfig) {
 	if c.Address == serverDefaultAddress {
 		c.Address = s.Address
 	}
+	if c.CryptoKey == serverDefaultCryptoKeyPath {
+		c.CryptoKey = s.CryptoKey
+	}
 }
 
 func (c *ServerConfig) loadConfigFromFile(filename string) (*ServerConfig, error) {
@@ -79,6 +84,7 @@ func (c *ServerConfig) Parse() error {
 	flag.StringVar(&c.HashKey, "k", serverDefaultHashKey, "key to create/validate hash")
 	flag.StringVar(&c.DBDsn, "d", serverDefaultDBDsn, "Postgres connection string")
 	flag.StringVar(&c.configFilePath, "c", serverDefaultConfigFilePath, "Config file path")
+	flag.StringVar(&c.CryptoKey, "crypto-key", serverDefaultCryptoKeyPath, "path to private key to decrypt messages")
 	flag.Parse()
 
 	if c.configFilePath != "" {

@@ -45,6 +45,14 @@ func main() {
 
 	metricServerClient := clients.NewMetricServerClient(cfg.Address)
 	agentService := service.NewAgentMetricService(&cfg, metricServerClient)
+	if cfg.CryptoKey != "" {
+		encryptionService, err2 := service.NewEncryptionService(cfg.CryptoKey)
+		if err2 != nil {
+			log.Fatal("cannot load public key specified: ", err2)
+		}
+		agentService = agentService.
+			WithRSAMessagesEncryption(encryptionService)
+	}
 
 	sched := gocron.NewScheduler(time.UTC)
 	_, err = sched.Every(cfg.PollInterval).

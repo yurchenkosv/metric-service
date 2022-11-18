@@ -5,8 +5,6 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/yurchenkosv/metric-service/internal/model"
 )
 
 // MetricServerClient struct with address and resty client to perform http requests.
@@ -30,16 +28,16 @@ func NewMetricServerClient(address string) *MetricServerClient {
 }
 
 // PushMetrics method sends metrics to metric server in multiple threads via http.
-func (c MetricServerClient) PushMetrics(metrics model.Metrics) {
-	go func() {
-		if len(metrics.Metric) > 0 {
-			_, err := c.client.R().
-				SetHeader("Content-Type", "application/json").
-				SetBody(metrics.Metric).
-				Post("/updates")
-			if err != nil {
-				log.Error(err)
-			}
-		}
-	}()
+func (c *MetricServerClient) PushMetrics(metrics string) {
+	go c.pushToServer(metrics)
+}
+
+func (c *MetricServerClient) pushToServer(msg string) {
+	_, err := c.client.R().
+		SetHeader("Content-Type", "application/json").
+		SetBody(msg).
+		Post("/updates")
+	if err != nil {
+		log.Error(err)
+	}
 }

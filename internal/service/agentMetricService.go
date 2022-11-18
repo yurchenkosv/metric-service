@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"runtime"
@@ -18,10 +19,11 @@ import (
 
 // AgentMetricService serves all work with metrics on agent (metric collector) side
 type AgentMetricService struct {
-	config  *config.AgentConfig
-	client  clients.MetricsClient
-	metrics *model.Metrics
-	mutex   sync.Mutex
+	config            *config.AgentConfig
+	encryptionService *EncryptionService
+	client            clients.MetricsClient
+	metrics           *model.Metrics
+	mutex             sync.Mutex
 }
 
 // NewAgentMetricService creates new AgentMetricService with filled fields and returns pointer on this object
@@ -34,9 +36,27 @@ func NewAgentMetricService(cfg *config.AgentConfig, client clients.MetricsClient
 }
 
 // Push is function to send metrics to server via network
-func (s *AgentMetricService) Push() {
-	s.client.PushMetrics(*s.metrics)
+func (s *AgentMetricService) Push() error {
+	var msg string
+	if len(s.metrics.Metric) == 0 {
+		return nil
+	}
+
+	data, err := json.Marshal(s.metrics)
+	if err != nil {
+		return err
+	}
+	msg = string(data)
+	if s.encryptionService != nil {
+		encMsg, err2 := s.encryptionService.EncryptMessage(string(data))
+		if err2 != nil {
+			return err
+		}
+		msg = encMsg
+	}
+	s.client.PushMetrics(msg)
 	s.metrics = &model.Metrics{Metric: []model.Metric{}}
+	return nil
 }
 
 // CreateSignedHash creates hash signed by key in config. Then this hash adds to metric.
@@ -149,4 +169,10 @@ func (s *AgentMetricService) appendCounterMetric(name string, value int64) {
 		Delta: counter,
 		Hash:  hash,
 	})
+}
+
+// WithRSAMessagesEncryption sets certificate to encrypt messages from client to server
+func (s *AgentMetricService) WithRSAMessagesEncryption(service *EncryptionService) *AgentMetricService {
+	s.encryptionService = service
+	return s
 }
