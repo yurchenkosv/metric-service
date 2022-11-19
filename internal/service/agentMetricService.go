@@ -42,7 +42,7 @@ func (s *AgentMetricService) Push() error {
 		return nil
 	}
 
-	data, err := json.Marshal(s.metrics)
+	data, err := json.Marshal(s.metrics.Metric)
 	if err != nil {
 		return err
 	}

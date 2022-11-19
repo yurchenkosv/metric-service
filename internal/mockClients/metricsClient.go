@@ -2,13 +2,12 @@
 // Source: .\internal\clients\metricsClient.go
 
 // Package mock_clients is a generated GoMock package.
-package mockClients
+package mock_clients
 
 import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	model "github.com/yurchenkosv/metric-service/internal/model"
 )
 
 // MockMetricsClient is a mock of MetricsClient interface.
@@ -34,14 +33,14 @@ func (m *MockMetricsClient) EXPECT() *MockMetricsClientMockRecorder {
 	return m.recorder
 }
 
-// PushMetrics mockRepository base method.
-func (m *MockMetricsClient) PushMetrics(metrics model.Metrics) {
+// PushMetrics mocks base method.
+func (m *MockMetricsClient) PushMetrics(msg string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "PushMetrics", metrics)
+	m.ctrl.Call(m, "PushMetrics", msg)
 }
 
 // PushMetrics indicates an expected call of PushMetrics.
-func (mr *MockMetricsClientMockRecorder) PushMetrics(metrics interface{}) *gomock.Call {
+func (mr *MockMetricsClientMockRecorder) PushMetrics(msg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushMetrics", reflect.TypeOf((*MockMetricsClient)(nil).PushMetrics), metrics)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushMetrics", reflect.TypeOf((*MockMetricsClient)(nil).PushMetrics), msg)
 }
