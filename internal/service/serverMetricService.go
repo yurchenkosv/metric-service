@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"sync"
 
@@ -167,7 +166,7 @@ func (s *ServerMetricService) SaveMetricsToDisk(ctx context.Context) error {
 // It reads Config.File, unmarshalls and then load model.Metrics to repository
 func (s *ServerMetricService) LoadMetricsFromDisk(ctx context.Context) error {
 	fileLocation := s.config.StoreFile
-	data, err := ioutil.ReadFile(fileLocation)
+	data, err := os.ReadFile(fileLocation)
 	if err != nil {
 		log.Println(err)
 		os.Create(fileLocation)

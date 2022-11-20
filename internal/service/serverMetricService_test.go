@@ -493,14 +493,14 @@ func TestServerMetricService_LoadMetricsFromDisk(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			metrics := model.Metrics{[]model.Metric{tt.args.metric}}
+			metrics := model.Metrics{Metric: []model.Metric{tt.args.metric}}
 			tt.behavior(tt.args.ctx, repo, metrics)
 			s := &ServerMetricService{
 				config: tt.fields.config,
 				repo:   repo,
 			}
 			tt.before(tt.fields.config.StoreFile, metrics)
-			tt.wantErr(t, s.LoadMetricsFromDisk(tt.args.ctx), fmt.Sprintf("LoadMetricsFromDisk()"))
+			tt.wantErr(t, s.LoadMetricsFromDisk(tt.args.ctx), fmt.Sprint("LoadMetricsFromDisk()"))
 		})
 	}
 }

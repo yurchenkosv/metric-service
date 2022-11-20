@@ -37,7 +37,7 @@ func NewServerConfig() *ServerConfig {
 }
 
 func (c *ServerConfig) mergeConfigs(s ServerConfig) {
-	if c.Restore == serverDefaultRestoreCondition {
+	if c.Restore {
 		c.Restore = s.Restore
 	}
 	if c.DBDsn == serverDefaultDBDsn {

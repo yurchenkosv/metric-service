@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
-	"io/ioutil"
+	"os"
 
 	"github.com/yurchenkosv/metric-service/internal/config"
 )
@@ -15,7 +15,7 @@ type AgentTLSService struct {
 }
 
 func loadCert(keyPath string) (*x509.Certificate, error) {
-	bytes, err := ioutil.ReadFile(keyPath)
+	bytes, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
 	}

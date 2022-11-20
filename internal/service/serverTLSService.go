@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -25,7 +24,7 @@ type ServerTLSService struct {
 }
 
 func loadPrivateKey(keyPath string) (*rsa.PrivateKey, error) {
-	bytes, err := ioutil.ReadFile(keyPath)
+	bytes, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil, err
 	}
