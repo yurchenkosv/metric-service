@@ -39,12 +39,20 @@ func main() {
 	}
 	log.WithFields(
 		log.Fields{
-			"poolInterval": cfg.PollInterval,
+			"pollInterval": cfg.PollInterval,
+			"sendInterval": cfg.ReportInterval,
 			"address":      cfg.Address,
 		}).Info("Starting metric agent")
 
 	metricServerClient := clients.NewMetricServerClient(cfg.Address)
 	agentService := service.NewAgentMetricService(&cfg, metricServerClient)
+	if cfg.CryptoKey != "" {
+		agentTLSService, err2 := service.NewAgentTLSService(cfg)
+		if err2 != nil {
+			log.Fatal("cannot load public key specified: ", err2)
+		}
+		metricServerClient.WithTLS(agentTLSService.GetTLSConfig()).SetScheme("https")
+	}
 
 	sched := gocron.NewScheduler(time.UTC)
 	_, err = sched.Every(cfg.PollInterval).

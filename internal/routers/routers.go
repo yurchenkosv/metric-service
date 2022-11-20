@@ -46,9 +46,12 @@ func NewRouter(cfg *config.ServerConfig, store repository.Repository) chi.Router
 		gr.Route("/ping", func(r chi.Router) {
 			r.Get("/", healthCheckHandler.HandleHealthChecks)
 		})
-		gr.Route("/updates", func(r chi.Router) {
+	})
+	router.Group(func(metricsRouter chi.Router) {
+		metricsRouter.Route("/updates", func(r chi.Router) {
 			r.Post("/", metricHandler.HandleUpdatesJSON)
 		})
+
 	})
 	router.Mount("/debug", middleware.Profiler())
 	return router

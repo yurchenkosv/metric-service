@@ -46,7 +46,7 @@ func TestAgentMetricService_CollectMetrics(t *testing.T) {
 func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 	type fields struct {
 		config *config.AgentConfig
-		client clients.MetricServerClient
+		client *clients.MetricServerClient
 	}
 	type args struct {
 		msg string
@@ -62,7 +62,7 @@ func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 			name: "shoud create correct hash with gauge",
 			fields: fields{
 				config: &config.AgentConfig{HashKey: "test"},
-				client: clients.MetricServerClient{},
+				client: &clients.MetricServerClient{},
 			},
 			args: args{
 				msg: "testGauge:gauge:12.5",
@@ -74,7 +74,7 @@ func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 			name: "shoud create correct hash with counter",
 			fields: fields{
 				config: &config.AgentConfig{HashKey: "test"},
-				client: clients.MetricServerClient{},
+				client: &clients.MetricServerClient{},
 			},
 			args: args{
 				msg: "testCounter:counter:7",
@@ -98,7 +98,7 @@ func TestAgentMetricService_CreateSignedHash(t *testing.T) {
 func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 	type fields struct {
 		config *config.AgentConfig
-		client clients.MetricServerClient
+		client *clients.MetricServerClient
 	}
 	type args struct {
 		name    string
@@ -114,7 +114,7 @@ func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 			name: "Should success add counter to metrics",
 			fields: fields{
 				config: &config.AgentConfig{},
-				client: clients.MetricServerClient{},
+				client: &clients.MetricServerClient{},
 			},
 			args: args{
 				name:    "",
@@ -134,7 +134,7 @@ func TestAgentMetricService_appendCounterMetric(t *testing.T) {
 func TestAgentMetricService_appendGaugeMetric(t *testing.T) {
 	type fields struct {
 		config *config.AgentConfig
-		client clients.MetricServerClient
+		client *clients.MetricServerClient
 	}
 	type args struct {
 		name    string
@@ -150,7 +150,7 @@ func TestAgentMetricService_appendGaugeMetric(t *testing.T) {
 			name: "should success add gauge to metrics",
 			fields: fields{
 				config: &config.AgentConfig{},
-				client: clients.MetricServerClient{},
+				client: &clients.MetricServerClient{},
 			},
 			args: args{
 				name:    "testGauge",
@@ -170,7 +170,7 @@ func TestAgentMetricService_appendGaugeMetric(t *testing.T) {
 func TestNewAgentMetricService(t *testing.T) {
 	type args struct {
 		config *config.AgentConfig
-		client clients.MetricServerClient
+		client *clients.MetricServerClient
 	}
 	tests := []struct {
 		name string
@@ -180,7 +180,7 @@ func TestNewAgentMetricService(t *testing.T) {
 		{
 			args: args{
 				config: &config.AgentConfig{},
-				client: clients.MetricServerClient{},
+				client: &clients.MetricServerClient{},
 			},
 			name: "should create AgentMetricService",
 		},

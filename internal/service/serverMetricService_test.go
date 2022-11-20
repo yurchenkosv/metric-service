@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	errors2 "errors"
+	"fmt"
+	"os"
 	"reflect"
 	"testing"
 
@@ -17,7 +20,7 @@ import (
 )
 
 func TestServerMetricService_AddMetric(t *testing.T) {
-	type mockBehavior func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context)
+	type mockBehavior func(ctx context.Context, s *mock_repository.MockRepository, metric model.Metric)
 	type fields struct {
 		config *config.ServerConfig
 	}
@@ -44,7 +47,7 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 				ctx: context.Background(),
 			},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context) {
+			behavior: func(ctx context.Context, s *mock_repository.MockRepository, metric model.Metric) {
 				s.EXPECT().SaveCounter(ctx, metric.ID, *metric.Delta).Return(nil)
 			},
 		},
@@ -60,7 +63,7 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 				ctx: context.Background(),
 			},
 			wantErr: false,
-			behavior: func(s *mock_repository.MockRepository, metric model.Metric, ctx context.Context) {
+			behavior: func(ctx context.Context, s *mock_repository.MockRepository, metric model.Metric) {
 				s.EXPECT().SaveGauge(ctx, metric.ID, *metric.Value).Return(nil)
 			},
 		},
@@ -70,10 +73,11 @@ func TestServerMetricService_AddMetric(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			repo := mock_repository.NewMockRepository(ctrl)
-			tt.behavior(repo, tt.args.metric, tt.args.ctx)
+			tt.behavior(tt.args.ctx, repo, tt.args.metric)
 			s := &ServerMetricService{
-				config: tt.fields.config,
-				repo:   repo,
+				config:            tt.fields.config,
+				saveMetricsToDisk: false,
+				repo:              repo,
 			}
 			if err := s.AddMetric(tt.args.ctx, tt.args.metric); (err != nil) != tt.wantErr {
 				t.Errorf("AddMetric() error = %v, wantErr %v", err, tt.wantErr)
@@ -407,56 +411,6 @@ func TestServerMetricService_GetMetricByKey(t *testing.T) {
 	}
 }
 
-//func TestServerMetricService_LoadMetricsFromDisk(t *testing.T) {
-//	type fields struct {
-//		config *config.ServerConfig
-//		repo   repository.Repository
-//	}
-//	tests := []struct {
-//		name    string
-//		fields  fields
-//		wantErr bool
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			s := &ServerMetricService{
-//				config: tt.fields.config,
-//				repo:   tt.fields.repo,
-//			}
-//			if err := s.LoadMetricsFromDisk(); (err != nil) != tt.wantErr {
-//				t.Errorf("LoadMetricsFromDisk() error = %v, wantErr %v", err, tt.wantErr)
-//			}
-//		})
-//	}
-//}
-//
-//func TestServerMetricService_SaveMetricsToDisk(t *testing.T) {
-//	type fields struct {
-//		config *config.ServerConfig
-//		repo   repository.Repository
-//	}
-//	tests := []struct {
-//		name    string
-//		fields  fields
-//		wantErr bool
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			s := &ServerMetricService{
-//				config: tt.fields.config,
-//				repo:   tt.fields.repo,
-//			}
-//			if err := s.SaveMetricsToDisk(); (err != nil) != tt.wantErr {
-//				t.Errorf("SaveMetricsToDisk() error = %v, wantErr %v", err, tt.wantErr)
-//			}
-//		})
-//	}
-//}
-
 func TestNewServerMetricService(t *testing.T) {
 	type args struct {
 		cnf  *config.ServerConfig
@@ -482,6 +436,171 @@ func TestNewServerMetricService(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, NewServerMetricService(tt.args.cnf, tt.args.repo), "NewServerMetricService(%v, %v)", tt.args.cnf, tt.args.repo)
+		})
+	}
+}
+
+func TestServerMetricService_LoadMetricsFromDisk(t *testing.T) {
+	type mockBehavior func(ctx context.Context, s *mock_repository.MockRepository, metrics model.Metrics)
+	type fields struct {
+		config *config.ServerConfig
+		repo   repository.Repository
+	}
+	type args struct {
+		ctx    context.Context
+		metric model.Metric
+	}
+
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  assert.ErrorAssertionFunc
+		behavior mockBehavior
+		before   func(fileLocation string, metrics model.Metrics)
+		args     args
+	}{
+		{
+			name: "should successfully load metrics",
+			fields: fields{
+				config: &config.ServerConfig{
+					StoreFile: "./metric_save",
+				},
+				repo: nil,
+			},
+			wantErr: assert.NoError,
+			args: args{
+				ctx: context.Background(),
+				metric: model.Metric{
+					ID:    "testGauge",
+					MType: "gauge",
+					Value: model.NewGauge(0.25),
+				},
+			},
+			before: func(fileLocation string, metrics model.Metrics) {
+				fileBits := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+				file, _ := os.OpenFile(fileLocation, fileBits, 0600)
+				data, _ := json.Marshal(metrics)
+				file.Write(data)
+				file.Close()
+			},
+			behavior: func(ctx context.Context, s *mock_repository.MockRepository, metrics model.Metrics) {
+				s.EXPECT().SaveMetricsBatch(ctx, metrics.Metric).Return(nil)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			repo := mock_repository.NewMockRepository(ctrl)
+			metrics := model.Metrics{Metric: []model.Metric{tt.args.metric}}
+			tt.behavior(tt.args.ctx, repo, metrics)
+			s := &ServerMetricService{
+				config: tt.fields.config,
+				repo:   repo,
+			}
+			tt.before(tt.fields.config.StoreFile, metrics)
+			tt.wantErr(t, s.LoadMetricsFromDisk(tt.args.ctx), "LoadMetricsFromDisk()")
+		})
+	}
+}
+
+func TestServerMetricService_SaveMetricsToDisk1(t *testing.T) {
+	type mockBehavior func(ctx context.Context, s *mock_repository.MockRepository, metrics model.Metrics)
+	type fields struct {
+		config            *config.ServerConfig
+		repo              repository.Repository
+		saveMetricsToDisk bool
+	}
+	type args struct {
+		ctx     context.Context
+		metrics model.Metrics
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		behavior mockBehavior
+		wantErr  assert.ErrorAssertionFunc
+	}{
+		{
+			name: "should successfuly save metrics to disk",
+			fields: fields{
+				config: &config.ServerConfig{
+					StoreFile: "./metric_save",
+				},
+				saveMetricsToDisk: true,
+			},
+			args: args{
+				ctx: context.Background(),
+				metrics: struct{ Metric []model.Metric }{Metric: []model.Metric{
+					{
+						ID:    "TestGauge",
+						MType: "gauge",
+						Value: model.NewGauge(5.2),
+					},
+				}},
+			},
+			behavior: func(ctx context.Context, s *mock_repository.MockRepository, metrics model.Metrics) {
+				s.EXPECT().GetAllMetrics(ctx).Return(&metrics, nil)
+			},
+			wantErr: assert.NoError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			repo := mock_repository.NewMockRepository(ctrl)
+			tt.behavior(tt.args.ctx, repo, tt.args.metrics)
+
+			s := &ServerMetricService{
+				config:            tt.fields.config,
+				repo:              repo,
+				saveMetricsToDisk: tt.fields.saveMetricsToDisk,
+			}
+
+			tt.wantErr(t, s.SaveMetricsToDisk(tt.args.ctx), fmt.Sprintf("SaveMetricsToDisk(%v)", tt.args.ctx))
+		})
+	}
+}
+
+func TestServerMetricService_Shutdown(t *testing.T) {
+	type mockBehavior func(s *mock_repository.MockRepository)
+	type fields struct {
+		config            *config.ServerConfig
+		repo              repository.Repository
+		saveMetricsToDisk bool
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		behavior mockBehavior
+	}{
+		{
+			name: "should successfully shutdown service",
+			fields: fields{
+				config:            &config.ServerConfig{},
+				repo:              nil,
+				saveMetricsToDisk: false,
+			},
+			behavior: func(s *mock_repository.MockRepository) {
+				s.EXPECT().Shutdown()
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			repo := mock_repository.NewMockRepository(ctrl)
+			tt.behavior(repo)
+			s := ServerMetricService{
+				config:            tt.fields.config,
+				repo:              repo,
+				saveMetricsToDisk: tt.fields.saveMetricsToDisk,
+			}
+			s.Shutdown()
 		})
 	}
 }

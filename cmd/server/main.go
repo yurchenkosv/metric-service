@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -26,6 +27,7 @@ var (
 	buildVersion = "N/A"
 	buildDate    = "N/A"
 	buildCommit  = "N/A"
+	mainContext  = context.Background()
 )
 
 func init() {
@@ -59,7 +61,7 @@ func main() {
 
 	metricService := service.NewServerMetricService(cfg, repo)
 	if cfg.Restore {
-		err2 := metricService.LoadMetricsFromDisk()
+		err2 := metricService.LoadMetricsFromDisk(mainContext)
 		if err2 != nil {
 			log.Fatal("cannot read metrics from file")
 		}
@@ -68,7 +70,7 @@ func main() {
 	sched := gocron.NewScheduler(time.UTC)
 	if cfg.StoreInterval != 0 && cfg.DBDsn == "" {
 		_, err2 := sched.Every(cfg.StoreInterval).
-			Do(metricService.SaveMetricsToDisk)
+			Do(metricService.SaveMetricsToDisk, mainContext)
 		if err2 != nil {
 			log.Error("cannot save metrics to disk", err2)
 		}
@@ -77,14 +79,32 @@ func main() {
 
 	router := routers.NewRouter(cfg, repo)
 	server := &http.Server{Addr: cfg.Address, Handler: router}
-	go func(server *http.Server) {
-		log.Warn(server.ListenAndServe())
-	}(server)
+	if cfg.CryptoKey != "" {
+		tlsService, err := service.NewServerTLSService(*cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = tlsService.CreatePemCertificateFromPrivateKey(strings.Split(cfg.Address, ":")[0])
+		if err != nil {
+			log.Fatal("cannot create expected certificate ", err)
+		}
+		cert, err := tlsService.SaveCertificateToDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+		go func(server *http.Server) {
+			log.Warn(server.ListenAndServeTLS(cert, cfg.CryptoKey))
+		}(server)
+	} else {
+		go func(server *http.Server) {
+			log.Warn(server.ListenAndServe())
+		}(server)
+	}
 
 	<-osSignal
-	log.Warn("shuting down server")
+	log.Warn("shutting down server")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(mainContext, 5*time.Second)
 	defer cancel()
 	err = server.Shutdown(ctx)
 	if err != nil {
