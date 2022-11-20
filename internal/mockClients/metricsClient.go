@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/yurchenkosv/metric-service/internal/model"
 )
 
 // MockMetricsClient is a mock of MetricsClient interface.
@@ -34,13 +35,13 @@ func (m *MockMetricsClient) EXPECT() *MockMetricsClientMockRecorder {
 }
 
 // PushMetrics mocks base method.
-func (m *MockMetricsClient) PushMetrics(msg string) {
+func (m *MockMetricsClient) PushMetrics(metrics []model.Metric) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "PushMetrics", msg)
+	m.ctrl.Call(m, "PushMetrics", metrics)
 }
 
 // PushMetrics indicates an expected call of PushMetrics.
-func (mr *MockMetricsClientMockRecorder) PushMetrics(msg interface{}) *gomock.Call {
+func (mr *MockMetricsClientMockRecorder) PushMetrics(metrics interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushMetrics", reflect.TypeOf((*MockMetricsClient)(nil).PushMetrics), msg)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushMetrics", reflect.TypeOf((*MockMetricsClient)(nil).PushMetrics), metrics)
 }

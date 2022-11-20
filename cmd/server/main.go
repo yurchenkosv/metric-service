@@ -102,7 +102,7 @@ func main() {
 	}
 
 	<-osSignal
-	log.Warn("shuting down server")
+	log.Warn("shutting down server")
 
 	ctx, cancel := context.WithTimeout(mainContext, 5*time.Second)
 	defer cancel()
