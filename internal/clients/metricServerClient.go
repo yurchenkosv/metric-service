@@ -1,10 +1,13 @@
 package clients
 
 import (
+	"crypto/tls"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/yurchenkosv/metric-service/internal/model"
 )
 
 // MetricServerClient struct with address and resty client to perform http requests.
@@ -27,15 +30,26 @@ func NewMetricServerClient(address string) *MetricServerClient {
 	return client
 }
 
+func (c *MetricServerClient) SetScheme(scheme string) *MetricServerClient {
+	c.client.
+		SetBaseURL(scheme + "://" + c.metricServerAddress)
+	return c
+}
+
 // PushMetrics method sends metrics to metric server in multiple threads via http.
-func (c *MetricServerClient) PushMetrics(metrics string) {
+func (c *MetricServerClient) PushMetrics(metrics []model.Metric) {
 	go c.pushToServer(metrics)
 }
 
-func (c *MetricServerClient) pushToServer(msg string) {
+func (c *MetricServerClient) WithTLS(tlsConfig *tls.Config) *MetricServerClient {
+	c.client.SetTLSClientConfig(tlsConfig)
+	return c
+}
+
+func (c *MetricServerClient) pushToServer(metrics []model.Metric) {
 	_, err := c.client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(msg).
+		SetBody(metrics).
 		Post("/updates")
 	if err != nil {
 		log.Error(err)

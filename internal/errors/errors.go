@@ -21,6 +21,10 @@ type MetricNotFoundError struct {
 type NoEncryptionKeyFoundError struct {
 }
 
+type NotAnEncryptedMessageError struct {
+	Message string
+}
+
 func (e NoSuchMetricError) Error() string {
 	return fmt.Sprintf("no such metric %s", e.MetricName)
 }
@@ -39,4 +43,8 @@ func (e MetricNotFoundError) Error() string {
 
 func (e NoEncryptionKeyFoundError) Error() string {
 	return "encryption key for hash signing not found"
+}
+
+func (e NotAnEncryptedMessageError) Error() string {
+	return fmt.Sprintf("error getting message cipher, Message was: %s", e.Message)
 }

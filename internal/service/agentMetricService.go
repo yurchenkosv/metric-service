@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"runtime"
@@ -19,11 +18,10 @@ import (
 
 // AgentMetricService serves all work with metrics on agent (metric collector) side
 type AgentMetricService struct {
-	config            *config.AgentConfig
-	encryptionService *EncryptionService
-	client            clients.MetricsClient
-	metrics           *model.Metrics
-	mutex             sync.Mutex
+	config  *config.AgentConfig
+	client  clients.MetricsClient
+	metrics *model.Metrics
+	mutex   sync.Mutex
 }
 
 // NewAgentMetricService creates new AgentMetricService with filled fields and returns pointer on this object
@@ -37,25 +35,14 @@ func NewAgentMetricService(cfg *config.AgentConfig, client clients.MetricsClient
 
 // Push is function to send metrics to server via network
 func (s *AgentMetricService) Push() error {
-	var msg string
+	log.Debug("starting to send metrics to server")
 	if len(s.metrics.Metric) == 0 {
+		log.Warn("looks like metrics are empty, nothing to send:, ", s.metrics.Metric)
 		return nil
 	}
-
-	data, err := json.Marshal(s.metrics.Metric)
-	if err != nil {
-		return err
-	}
-	msg = string(data)
-	if s.encryptionService != nil {
-		encMsg, err2 := s.encryptionService.EncryptMessage(string(data))
-		if err2 != nil {
-			return err
-		}
-		msg = encMsg
-	}
-	s.client.PushMetrics(msg)
+	s.client.PushMetrics(s.metrics.Metric)
 	s.metrics = &model.Metrics{Metric: []model.Metric{}}
+	log.Debug("finish sending metrics to server")
 	return nil
 }
 
@@ -70,10 +57,12 @@ func (s *AgentMetricService) CreateSignedHash(msg string) (string, error) {
 
 // CollectMetrics main method for this service. It's collects cpu and RAM metrics
 // and stores it in metrics field of AgentMetricService
-func (s *AgentMetricService) CollectMetrics(poolCount int) {
+func (s *AgentMetricService) CollectMetrics(pollCount int) {
 	var wg sync.WaitGroup
 
 	wg.Add(2)
+
+	log.Debug("starting new metric poll: ", pollCount)
 
 	go func() {
 		var rtm runtime.MemStats
@@ -107,7 +96,7 @@ func (s *AgentMetricService) CollectMetrics(poolCount int) {
 		s.appendGaugeMetric("Sys", float64(rtm.Sys))
 		s.appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc))
 		s.appendGaugeMetric("RandomValue", rand.Float64())
-		s.appendCounterMetric("PollCount", int64(poolCount))
+		s.appendCounterMetric("PollCount", int64(pollCount))
 		wg.Done()
 	}()
 
@@ -132,6 +121,8 @@ func (s *AgentMetricService) CollectMetrics(poolCount int) {
 	}()
 
 	wg.Wait()
+
+	log.Debugf("poll %d sucessfuly finished", pollCount)
 }
 
 func (s *AgentMetricService) appendGaugeMetric(name string, value float64) {
@@ -169,10 +160,4 @@ func (s *AgentMetricService) appendCounterMetric(name string, value int64) {
 		Delta: counter,
 		Hash:  hash,
 	})
-}
-
-// WithRSAMessagesEncryption sets certificate to encrypt messages from client to server
-func (s *AgentMetricService) WithRSAMessagesEncryption(service *EncryptionService) *AgentMetricService {
-	s.encryptionService = service
-	return s
 }

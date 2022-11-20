@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -32,7 +33,7 @@ var (
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(log.WarnLevel)
 }
 
 func main() {
@@ -78,9 +79,27 @@ func main() {
 
 	router := routers.NewRouter(cfg, repo)
 	server := &http.Server{Addr: cfg.Address, Handler: router}
-	go func(server *http.Server) {
-		log.Warn(server.ListenAndServe())
-	}(server)
+	if cfg.CryptoKey != "" {
+		tlsService, err := service.NewServerTLSService(*cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		_, err = tlsService.CreatePemCertificateFromPrivateKey(strings.Split(cfg.Address, ":")[0])
+		if err != nil {
+			log.Fatal("cannot create expected certificate ", err)
+		}
+		cert, err := tlsService.SaveCertificateToDisk()
+		if err != nil {
+			log.Fatal(err)
+		}
+		go func(server *http.Server) {
+			log.Warn(server.ListenAndServeTLS(cert, cfg.CryptoKey))
+		}(server)
+	} else {
+		go func(server *http.Server) {
+			log.Warn(server.ListenAndServe())
+		}(server)
+	}
 
 	<-osSignal
 	log.Warn("shuting down server")

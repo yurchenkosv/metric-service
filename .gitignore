@@ -27,3 +27,6 @@ vendor/
 .idea
 .vscode
 *.tmp
+
+*.pem
+*.crt
