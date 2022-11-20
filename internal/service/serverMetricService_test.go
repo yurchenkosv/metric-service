@@ -500,7 +500,7 @@ func TestServerMetricService_LoadMetricsFromDisk(t *testing.T) {
 				repo:   repo,
 			}
 			tt.before(tt.fields.config.StoreFile, metrics)
-			tt.wantErr(t, s.LoadMetricsFromDisk(tt.args.ctx), fmt.Sprint("LoadMetricsFromDisk()"))
+			tt.wantErr(t, s.LoadMetricsFromDisk(tt.args.ctx), "LoadMetricsFromDisk()")
 		})
 	}
 }
