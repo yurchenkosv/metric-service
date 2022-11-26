@@ -1,3 +1,6 @@
+//go:build integration
+// +build integration
+
 package repository
 
 import (
@@ -111,7 +114,7 @@ func TestPostgresRepo_GetAllMetrics(t *testing.T) {
 					     metric_id,
 					     metric_type,
 					     metric_delta
-						) 
+						)
 					VALUES (
 							 1,
 					        'RandomValue',
@@ -184,7 +187,7 @@ func TestPostgresRepo_GetMetricByKey(t *testing.T) {
 					     metric_id,
 					     metric_type,
 					     metric_delta
-						) 
+						)
 					VALUES (
 							 1,
 					        'RandomValue',
