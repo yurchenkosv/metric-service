@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v4"
-	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/yurchenkosv/metric-service/internal/model"
