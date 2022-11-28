@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"sync"
 
@@ -17,15 +16,21 @@ import (
 
 // ServerMetricService main service to work with metrics on server side
 type ServerMetricService struct {
-	config *config.ServerConfig
-	repo   repository.Repository
+	config            *config.ServerConfig
+	repo              repository.Repository
+	saveMetricsToDisk bool
 }
 
 // NewServerMetricService creates new ServerMetricService and returns pointer on it.
 func NewServerMetricService(cnf *config.ServerConfig, repo repository.Repository) *ServerMetricService {
+	needSave := false
+	if cnf.StoreFile != "" {
+		needSave = true
+	}
 	return &ServerMetricService{
-		config: cnf,
-		repo:   repo,
+		config:            cnf,
+		repo:              repo,
+		saveMetricsToDisk: needSave,
 	}
 }
 
@@ -33,7 +38,8 @@ func NewServerMetricService(cnf *config.ServerConfig, repo repository.Repository
 // This method for gracefully shutdown operations before shutting down application
 func (s ServerMetricService) Shutdown() {
 	if s.config.StoreInterval != 0 && s.config.DBDsn == "" {
-		err := s.SaveMetricsToDisk()
+		ctx := context.Background()
+		err := s.SaveMetricsToDisk(ctx)
 		if err != nil {
 			log.Error("cannot store metrics in file")
 		}
@@ -60,7 +66,7 @@ func (s *ServerMetricService) AddMetric(ctx context.Context, metric model.Metric
 	default:
 		return &errors.NoSuchMetricError{MetricName: metric.ID}
 	}
-	err := s.SaveMetricsToDisk()
+	err := s.SaveMetricsToDisk(ctx)
 	if err != nil {
 		log.Error(err)
 	}
@@ -80,7 +86,7 @@ func (s *ServerMetricService) AddMetricBatch(ctx context.Context, metrics model.
 		return err
 	}
 
-	err = s.SaveMetricsToDisk()
+	err = s.SaveMetricsToDisk(ctx)
 	if err != nil {
 		log.Error(err)
 	}
@@ -118,10 +124,9 @@ func (s *ServerMetricService) CreateSignedHash(msg string) (string, error) {
 
 // SaveMetricsToDisk method to save all metrics to file if Config.File and StoreInterval is set.
 // It gets all metrics from repository, then marshall it to JSON and write to file.
-func (s *ServerMetricService) SaveMetricsToDisk() error {
+func (s *ServerMetricService) SaveMetricsToDisk(ctx context.Context) error {
 	var mutex sync.Mutex
-	ctx := context.Background()
-	if s.config.StoreFile == "" {
+	if !s.saveMetricsToDisk {
 		return nil
 	}
 
@@ -159,11 +164,9 @@ func (s *ServerMetricService) SaveMetricsToDisk() error {
 
 // LoadMetricsFromDisk method to restore metrics state from disk if Config.Restore is true.
 // It reads Config.File, unmarshalls and then load model.Metrics to repository
-func (s *ServerMetricService) LoadMetricsFromDisk() error {
+func (s *ServerMetricService) LoadMetricsFromDisk(ctx context.Context) error {
 	fileLocation := s.config.StoreFile
-	cxt := context.Background()
-
-	data, err := ioutil.ReadFile(fileLocation)
+	data, err := os.ReadFile(fileLocation)
 	if err != nil {
 		log.Println(err)
 		os.Create(fileLocation)
@@ -176,7 +179,7 @@ func (s *ServerMetricService) LoadMetricsFromDisk() error {
 		return nil
 	}
 
-	err = s.AddMetricBatch(cxt, metrics)
+	err = s.AddMetricBatch(ctx, metrics)
 	if err != nil {
 		return err
 	}

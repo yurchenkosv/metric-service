@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -36,7 +35,7 @@ func GzipDecompress(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		r.Body = ioutil.NopCloser(bytes.NewReader(body))
+		r.Body = io.NopCloser(bytes.NewReader(body))
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
@@ -72,7 +71,7 @@ func CheckHash(svc *service.ServerMetricService) func(handler http.Handler) http
 			var metric model.Metric
 			var msg string
 			data, err := io.ReadAll(r.Body)
-			r.Body = ioutil.NopCloser(bytes.NewReader(data))
+			r.Body = io.NopCloser(bytes.NewReader(data))
 			if err != nil {
 				log.Fatal(err)
 				return

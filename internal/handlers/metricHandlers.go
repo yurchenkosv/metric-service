@@ -48,6 +48,7 @@ func (h MetricHandler) HandleUpdateMetricJSON(writer http.ResponseWriter, reques
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	log.Debugf("receive message with content: '%s'", string(body))
 	err = json.Unmarshal(body, &metric)
 	if err != nil {
 		log.Error("cannot unmarshall", err)
@@ -82,6 +83,8 @@ func (h MetricHandler) HandleUpdatesJSON(writer http.ResponseWriter, request *ht
 		log.Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
+	log.Debugf("receive message with content: '%s'", string(data))
+
 	err = json.Unmarshal(data, &metrics)
 	if err != nil {
 		log.Error(err)

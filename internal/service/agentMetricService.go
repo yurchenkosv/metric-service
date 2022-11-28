@@ -34,9 +34,16 @@ func NewAgentMetricService(cfg *config.AgentConfig, client clients.MetricsClient
 }
 
 // Push is function to send metrics to server via network
-func (s *AgentMetricService) Push() {
-	s.client.PushMetrics(*s.metrics)
+func (s *AgentMetricService) Push() error {
+	log.Debug("starting to send metrics to server")
+	if len(s.metrics.Metric) == 0 {
+		log.Warn("looks like metrics are empty, nothing to send:, ", s.metrics.Metric)
+		return nil
+	}
+	s.client.PushMetrics(s.metrics.Metric)
 	s.metrics = &model.Metrics{Metric: []model.Metric{}}
+	log.Debug("finish sending metrics to server")
+	return nil
 }
 
 // CreateSignedHash creates hash signed by key in config. Then this hash adds to metric.
@@ -50,10 +57,12 @@ func (s *AgentMetricService) CreateSignedHash(msg string) (string, error) {
 
 // CollectMetrics main method for this service. It's collects cpu and RAM metrics
 // and stores it in metrics field of AgentMetricService
-func (s *AgentMetricService) CollectMetrics(poolCount int) {
+func (s *AgentMetricService) CollectMetrics(pollCount int) {
 	var wg sync.WaitGroup
 
 	wg.Add(2)
+
+	log.Debug("starting new metric poll: ", pollCount)
 
 	go func() {
 		var rtm runtime.MemStats
@@ -87,7 +96,7 @@ func (s *AgentMetricService) CollectMetrics(poolCount int) {
 		s.appendGaugeMetric("Sys", float64(rtm.Sys))
 		s.appendGaugeMetric("TotalAlloc", float64(rtm.TotalAlloc))
 		s.appendGaugeMetric("RandomValue", rand.Float64())
-		s.appendCounterMetric("PollCount", int64(poolCount))
+		s.appendCounterMetric("PollCount", int64(pollCount))
 		wg.Done()
 	}()
 
@@ -112,6 +121,8 @@ func (s *AgentMetricService) CollectMetrics(poolCount int) {
 	}()
 
 	wg.Wait()
+
+	log.Debugf("poll %d sucessfuly finished", pollCount)
 }
 
 func (s *AgentMetricService) appendGaugeMetric(name string, value float64) {

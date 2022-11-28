@@ -2,7 +2,7 @@
 // Source: .\internal\clients\metricsClient.go
 
 // Package mock_clients is a generated GoMock package.
-package mockClients
+package mock_clients
 
 import (
 	reflect "reflect"
@@ -34,8 +34,8 @@ func (m *MockMetricsClient) EXPECT() *MockMetricsClientMockRecorder {
 	return m.recorder
 }
 
-// PushMetrics mockRepository base method.
-func (m *MockMetricsClient) PushMetrics(metrics model.Metrics) {
+// PushMetrics mocks base method.
+func (m *MockMetricsClient) PushMetrics(metrics []model.Metric) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "PushMetrics", metrics)
 }
