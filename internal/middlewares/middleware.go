@@ -14,6 +14,7 @@ import (
 
 	"github.com/yurchenkosv/metric-service/internal/model"
 	"github.com/yurchenkosv/metric-service/internal/service"
+	"net"
 )
 
 // GzipDecompress is middleware to decompress message body, that was compressed with Gzip algo.
@@ -60,6 +61,35 @@ func GzipCompress(next http.Handler) http.Handler {
 		next.ServeHTTP(model.GzipWriter{ResponseWriter: w, Writer: gz}, r)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func AcceptFromTrustedSubnets(subnet string) func(handler http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			hdr := r.Header.Get("X-Real-IP")
+			if hdr == "" {
+				return
+			}
+			ip := net.ParseIP(hdr)
+			if ip == nil {
+				log.Error("cannot parse ip from string ", hdr)
+				return
+			}
+			_, network, err := net.ParseCIDR(subnet)
+			if err != nil {
+				log.Error(err)
+				return
+			}
+			if !network.Contains(ip) {
+				log.Errorf("ip %v not in network %s", ip, subnet)
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+
 }
 
 // CheckHash middleware to get hash from JSON message and check, that hash is valid.

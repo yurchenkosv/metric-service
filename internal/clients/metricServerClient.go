@@ -36,6 +36,11 @@ func (c *MetricServerClient) SetScheme(scheme string) *MetricServerClient {
 	return c
 }
 
+func (c *MetricServerClient) SetHeader(key, val string) *MetricServerClient {
+	c.client.SetHeader(key, val)
+	return c
+}
+
 // PushMetrics method sends metrics to metric server in multiple threads via http.
 func (c *MetricServerClient) PushMetrics(metrics []model.Metric) {
 	go c.pushToServer(metrics)

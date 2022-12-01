@@ -17,7 +17,8 @@ const serverDefaultRestoreCondition bool = true
 const serverDefaultHashKey string = ""
 const serverDefaultDBDsn string = ""
 const serverDefaultConfigFilePath string = ""
-const serverDefaultCryptoKeyPath = ""
+const serverDefaultCryptoKeyPath string = ""
+const serverDefaultTrustedSubnet string = ""
 
 // ServerConfig struct with fields, useful for configuring metrics server.
 type ServerConfig struct {
@@ -28,6 +29,7 @@ type ServerConfig struct {
 	HashKey        string        `env:"KEY" json:"crypto_key"`                // key to create/validate hash
 	DBDsn          string        `env:"DATABASE_DSN" json:"database_dsn"`     // Postgres connection string in DSN format
 	CryptoKey      string        `env:"CRYPTO_KEY"`                           // Path to private cipher key
+	TrustedSubnet  string 		 `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
 	configFilePath string
 }
 
@@ -58,6 +60,9 @@ func (c *ServerConfig) mergeConfigs(s ServerConfig) {
 	if c.CryptoKey == serverDefaultCryptoKeyPath {
 		c.CryptoKey = s.CryptoKey
 	}
+	if c.TrustedSubnet == serverDefaultTrustedSubnet {
+		c.TrustedSubnet = s.TrustedSubnet
+	}
 }
 
 func (c *ServerConfig) loadConfigFromFile(filename string) (*ServerConfig, error) {
@@ -85,6 +90,7 @@ func (c *ServerConfig) Parse() error {
 	flag.StringVar(&c.DBDsn, "d", serverDefaultDBDsn, "Postgres connection string")
 	flag.StringVar(&c.configFilePath, "c", serverDefaultConfigFilePath, "Config file path")
 	flag.StringVar(&c.CryptoKey, "crypto-key", serverDefaultCryptoKeyPath, "path to private key to decrypt messages")
+	flag.StringVar(&c.TrustedSubnet, "t", serverDefaultTrustedSubnet, "trusted subnet from which accept connections")
 	flag.Parse()
 
 	if c.configFilePath != "" {
