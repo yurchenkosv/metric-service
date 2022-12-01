@@ -27,11 +27,14 @@ func NewRouter(cfg *config.ServerConfig, store repository.Repository) chi.Router
 	router.Use(middleware.Logger)
 	router.Use(middleware.StripSlashes)
 	router.Use(middleware.Recoverer)
+	router.Use(middleware.AllowContentType("text/plain", "application/json"))
+	router.Use(middlewares.GzipCompress)
+	router.Use(middlewares.GzipDecompress)
+	if cfg.TrustedSubnet != "" {
+		router.Use(middlewares.AcceptFromTrustedSubnets(cfg.TrustedSubnet))
+	}
 
 	router.Group(func(gr chi.Router) {
-		gr.Use(middleware.AllowContentType("text/plain", "application/json"))
-		gr.Use(middlewares.GzipCompress)
-		gr.Use(middlewares.GzipDecompress)
 		gr.Route("/update", func(r chi.Router) {
 			r.Post("/", metricHandler.HandleUpdateMetricJSON)
 			r.Post("/{metricType}/{metricName}/{metricValue}", metricHandler.HandleUpdateMetric)

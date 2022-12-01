@@ -44,7 +44,11 @@ func main() {
 			"address":      cfg.Address,
 		}).Info("Starting metric agent")
 
-	metricServerClient := clients.NewMetricServerClient(cfg.Address)
+	ip, err := resolveIP(cfg.Address)
+	if err != nil {
+		log.Fatal("cannot resolve ip by bind hostname ", err)
+	}
+	metricServerClient := clients.NewMetricServerClient(cfg.Address).SetHeader("X-Real-IP", ip.String())
 	agentService := service.NewAgentMetricService(&cfg, metricServerClient)
 	if cfg.CryptoKey != "" {
 		agentTLSService, err2 := service.NewAgentTLSService(cfg)
