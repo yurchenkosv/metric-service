@@ -1,24 +1,23 @@
 package service
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/yurchenkosv/metric-service/internal/config"
-	"testing"
-	"crypto/rsa"
-	"crypto/rand"
-	log "github.com/sirupsen/logrus"
 	"math/big"
+	"testing"
 )
 
 func getPrivateKey() *rsa.PrivateKey {
-	privKey, err := rsa.GenerateKey(rand.Reader,2048)
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		log.Error(err)
 	}
 	return privKey
 }
-
 
 func TestNewServerTLSService(t *testing.T) {
 	type args struct {
@@ -51,7 +50,7 @@ func TestServerTLSService_CreatePemCertificateFromPrivateKey(t *testing.T) {
 	}
 	type args struct {
 		dnsName []string
-		serial *big.Int
+		serial  *big.Int
 	}
 	tests := []struct {
 		name    string
@@ -136,7 +135,7 @@ func TestServerTLSService_SaveCertificateToDisk(t *testing.T) {
 				cfg:        tt.fields.cfg,
 			}
 			got, err := s.SaveCertificateToDisk()
-			if !tt.wantErr(t, err, fmt.Sprintf("SaveCertificateToDisk()")) {
+			if !tt.wantErr(t, err, "SaveCertificateToDisk()") {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "SaveCertificateToDisk()")
