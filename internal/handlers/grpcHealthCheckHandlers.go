@@ -18,12 +18,13 @@ func NewGRPCHealthCheckHandler(svc *service.HealthCheckService) *GRPCHealthCheck
 }
 
 func (h *GRPCHealthChecksHandler) GetHealthStatus(ctx context.Context, ping *api.Ping) (*api.Pong, error) {
-	var pong *api.Pong
 	err := h.svc.CheckRepoHealth(ctx)
 	if err != nil {
-		pong.Status = api.HealthStatus_error
-		return pong, err
+		return &api.Pong{
+			Status: api.HealthStatus_error,
+		}, err
 	}
-	pong.Status = api.HealthStatus_healthy
-	return pong, nil
+	return &api.Pong{
+		Status: api.HealthStatus_healthy,
+	}, nil
 }

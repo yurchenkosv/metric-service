@@ -28,7 +28,7 @@ func (c *GRPCMetricServerClient) PushMetrics(metrics []model.Metric) {
 
 	ctx := context.Background()
 	for _, metric := range metrics {
-		apiMetric, err := api.MetricToApiMetric(metric)
+		apiMetric, err := api.MetricToAPIMetric(metric)
 		if err != nil {
 			log.Errorf("cannot transform metric %v to API metric. Error: %s", metric, err)
 		}

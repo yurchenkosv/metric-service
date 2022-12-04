@@ -5,7 +5,7 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/model"
 )
 
-func MetricToApiMetric(metric model.Metric) (*Metric, error) {
+func MetricToAPIMetric(metric model.Metric) (*Metric, error) {
 	var (
 		mtype MetricType
 	)
@@ -34,7 +34,7 @@ func MetricToApiMetric(metric model.Metric) (*Metric, error) {
 	}
 }
 
-func ApiMetricToMetric(metric *Metric) (model.Metric, error) {
+func APIMetricToMetric(metric *Metric) (model.Metric, error) {
 	return model.Metric{
 		ID:    metric.Id,
 		MType: metric.Mtype.String(),

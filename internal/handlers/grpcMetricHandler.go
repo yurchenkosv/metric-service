@@ -24,16 +24,16 @@ func (h *GRPCMetricHandler) GetMetricByID(ctx context.Context, req *api.MetricRe
 		log.Error(err)
 		return nil, err
 	}
-	return api.MetricToApiMetric(*metric)
+	return api.MetricToAPIMetric(*metric)
 }
 func (h *GRPCMetricHandler) GetAllMetrics(ctx context.Context, req *api.MetricRequestAll) (*api.Metrics, error) {
-	var apiMetrics *api.Metrics
+	apiMetrics := &api.Metrics{}
 	metrics, err := h.metricService.GetAllMetrics(ctx)
 	if err != nil {
 		return nil, err
 	}
 	for _, metric := range metrics.Metric {
-		apiMetric, err2 := api.MetricToApiMetric(metric)
+		apiMetric, err2 := api.MetricToAPIMetric(metric)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -42,7 +42,7 @@ func (h *GRPCMetricHandler) GetAllMetrics(ctx context.Context, req *api.MetricRe
 	return apiMetrics, nil
 }
 func (h *GRPCMetricHandler) SaveMetric(ctx context.Context, req *api.Metric) (*api.MetricResponse, error) {
-	metric, err := api.ApiMetricToMetric(req)
+	metric, err := api.APIMetricToMetric(req)
 	if err != nil {
 		return &api.MetricResponse{Status: api.MetricStatus_rejected}, err
 	}
@@ -55,7 +55,7 @@ func (h *GRPCMetricHandler) SaveMetric(ctx context.Context, req *api.Metric) (*a
 func (h *GRPCMetricHandler) SaveMetrics(ctx context.Context, req *api.Metrics) (*api.MetricResponse, error) {
 	var metrics model.Metrics
 	for _, apiMetric := range req.Metrics {
-		metric, err := api.ApiMetricToMetric(apiMetric)
+		metric, err := api.APIMetricToMetric(apiMetric)
 		if err != nil {
 			return &api.MetricResponse{Status: api.MetricStatus_rejected}, err
 		}
