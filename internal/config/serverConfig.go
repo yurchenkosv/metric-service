@@ -19,6 +19,7 @@ const serverDefaultDBDsn string = ""
 const serverDefaultConfigFilePath string = ""
 const serverDefaultCryptoKeyPath string = ""
 const serverDefaultTrustedSubnet string = ""
+const serverDefaultGRPCAddress string = "localhost:8090"
 
 // ServerConfig struct with fields, useful for configuring metrics server.
 type ServerConfig struct {
@@ -29,7 +30,8 @@ type ServerConfig struct {
 	HashKey        string        `env:"KEY" json:"crypto_key"`                // key to create/validate hash
 	DBDsn          string        `env:"DATABASE_DSN" json:"database_dsn"`     // Postgres connection string in DSN format
 	CryptoKey      string        `env:"CRYPTO_KEY"`                           // Path to private cipher key
-	TrustedSubnet  string 		 `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
+	TrustedSubnet  string        `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
+	GRPCAddress    string        `env:"GRPC_ADDRESS" json:"grpc_address"`
 	configFilePath string
 }
 
@@ -63,6 +65,9 @@ func (c *ServerConfig) mergeConfigs(s ServerConfig) {
 	if c.TrustedSubnet == serverDefaultTrustedSubnet {
 		c.TrustedSubnet = s.TrustedSubnet
 	}
+	if c.GRPCAddress == serverDefaultGRPCAddress {
+		c.GRPCAddress = s.GRPCAddress
+	}
 }
 
 func (c *ServerConfig) loadConfigFromFile(filename string) (*ServerConfig, error) {
@@ -91,6 +96,7 @@ func (c *ServerConfig) Parse() error {
 	flag.StringVar(&c.configFilePath, "c", serverDefaultConfigFilePath, "Config file path")
 	flag.StringVar(&c.CryptoKey, "crypto-key", serverDefaultCryptoKeyPath, "path to private key to decrypt messages")
 	flag.StringVar(&c.TrustedSubnet, "t", serverDefaultTrustedSubnet, "trusted subnet from which accept connections")
+	flag.StringVar(&c.GRPCAddress, "transport", serverDefaultGRPCAddress, "transport type. Could be http or grpc")
 	flag.Parse()
 
 	if c.configFilePath != "" {

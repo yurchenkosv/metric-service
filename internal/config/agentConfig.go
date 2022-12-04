@@ -16,6 +16,7 @@ const agentDefaultPollInterval time.Duration = 2 * time.Second
 const agentDefaultHashKey string = ""
 const agentDefaultConfigFilepath string = ""
 const agentDefaultCryptoKeyPath = ""
+const agentDefaultTransportType = "http"
 
 // AgentConfig struct with fields, useful for configuring metrics agent.
 type AgentConfig struct {
@@ -24,6 +25,7 @@ type AgentConfig struct {
 	PollInterval   time.Duration `env:"POLL_INTERVAL"`   // interval to collect metrics
 	HashKey        string        `env:"KEY"`             // key to create hash
 	CryptoKey      string        `env:"CRYPTO_KEY"`      // path to private cipher key
+	TransportType  string        `env:"TRANSPORT"`
 	configFilePath string
 }
 
@@ -56,6 +58,9 @@ func (c *AgentConfig) mergeConfigs(s AgentConfig) {
 	if c.CryptoKey == agentDefaultCryptoKeyPath {
 		c.CryptoKey = s.CryptoKey
 	}
+	if c.TransportType == agentDefaultTransportType {
+		c.TransportType = s.TransportType
+	}
 }
 
 // Parse method to fulfill AgentConfig fields.
@@ -67,6 +72,7 @@ func (c *AgentConfig) Parse() error {
 	flag.StringVar(&c.HashKey, "k", agentDefaultHashKey, "key to create hash")
 	flag.StringVar(&c.configFilePath, "c", agentDefaultConfigFilepath, "path to config file")
 	flag.StringVar(&c.CryptoKey, "crypto-key", agentDefaultCryptoKeyPath, "path to public key to encrypt messages")
+	flag.StringVar(&c.TransportType, "transport", agentDefaultTransportType, "transport type could be http or grpc")
 	flag.Parse()
 
 	if c.configFilePath != "" {

@@ -18,7 +18,11 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/service"
 	"github.com/yurchenkosv/metric-service/pkg/finalizer"
 
+	"github.com/yurchenkosv/metric-service/internal/api"
+	"github.com/yurchenkosv/metric-service/internal/handlers"
 	"github.com/yurchenkosv/metric-service/internal/routers"
+	"google.golang.org/grpc"
+	"net"
 )
 
 var (
@@ -101,6 +105,23 @@ func main() {
 		}(server)
 	}
 
+	grpcServer := grpc.NewServer()
+	grpcMetricsHanlrer := handlers.NewGRPCMetricHandler(metricService)
+	grpcHealthCheckHandler := handlers.NewGRPCHealthCheckHandler(service.NewHealthCheckService(cfg, repo))
+	api.RegisterMetricServiceServer(grpcServer, grpcMetricsHanlrer)
+	api.RegisterHealthcheckServer(grpcServer, grpcHealthCheckHandler)
+	listener, err := net.Listen("tcp", cfg.GRPCAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func(listener net.Listener) {
+		err = grpcServer.Serve(listener)
+		if err != nil {
+			log.Error(err)
+		}
+	}(listener)
+
 	<-osSignal
 	log.Warn("shutting down server")
 
@@ -110,9 +131,9 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	}
+	grpcServer.GracefulStop()
 	finalizer.Shutdown(func() {
 		sched.Stop()
 		metricService.Shutdown()
 	})
-
 }
