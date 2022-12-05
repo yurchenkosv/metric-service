@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/yurchenkosv/metric-service/internal/config"
+	"google.golang.org/grpc/credentials"
 )
 
 type AgentTLSService struct {
@@ -50,4 +51,8 @@ func (s *AgentTLSService) GetTLSConfig() *tls.Config {
 
 func (s *AgentTLSService) GetCertificate() *x509.Certificate {
 	return s.cert
+}
+
+func (s *AgentTLSService) GetGRPCTLSCredentials() credentials.TransportCredentials {
+	return credentials.NewTLS(s.GetTLSConfig())
 }

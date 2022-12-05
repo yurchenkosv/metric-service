@@ -14,6 +14,8 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/config"
 	"github.com/yurchenkosv/metric-service/internal/service"
 	"github.com/yurchenkosv/metric-service/pkg/finalizer"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var (
@@ -21,6 +23,8 @@ var (
 	buildVersion = "N/A"
 	buildDate    = "N/A"
 	buildCommit  = "N/A"
+	client       clients.MetricsClient
+	tlsService   *service.AgentTLSService
 )
 
 func init() {
@@ -48,15 +52,36 @@ func main() {
 	if err != nil {
 		log.Fatal("cannot resolve ip by bind hostname ", err)
 	}
-	metricServerClient := clients.NewMetricServerClient(cfg.Address).SetHeader("X-Real-IP", ip.String())
-	agentService := service.NewAgentMetricService(&cfg, metricServerClient)
+
 	if cfg.CryptoKey != "" {
-		agentTLSService, err2 := service.NewAgentTLSService(cfg)
+		svc, err2 := service.NewAgentTLSService(cfg)
 		if err2 != nil {
 			log.Fatal("cannot load public key specified: ", err2)
 		}
-		metricServerClient.WithTLS(agentTLSService.GetTLSConfig()).SetScheme("https")
+		tlsService = svc
 	}
+	switch cfg.TransportType {
+	case "http":
+		metricServerClient := clients.NewMetricServerClient(cfg.Address).SetHeader("X-Real-IP", ip.String())
+		if cfg.CryptoKey != "" {
+			metricServerClient.WithTLS(tlsService.GetTLSConfig()).SetScheme("https")
+		}
+		client = metricServerClient
+	case "grpc":
+		dialOption := grpc.WithTransportCredentials(insecure.NewCredentials())
+		if cfg.CryptoKey != "" {
+			dialOption = grpc.WithTransportCredentials(tlsService.GetGRPCTLSCredentials())
+		}
+		conn, err2 := grpc.Dial(cfg.Address, dialOption)
+		if err2 != nil {
+			log.Fatal(err2)
+		}
+		client = clients.NewGRPCMetricServerClient(conn)
+	default:
+		log.Fatalf("cannot use %s as transport type", cfg.TransportType)
+	}
+
+	agentService := service.NewAgentMetricService(&cfg, client)
 
 	sched := gocron.NewScheduler(time.UTC)
 	_, err = sched.Every(cfg.PollInterval).
