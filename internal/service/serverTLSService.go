@@ -12,8 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yurchenkosv/metric-service/internal/config"
+	"crypto/tls"
 	log "github.com/sirupsen/logrus"
+	"github.com/yurchenkosv/metric-service/internal/config"
+	"google.golang.org/grpc/credentials"
 )
 
 type ServerTLSService struct {
@@ -96,4 +98,16 @@ func (s *ServerTLSService) GetPrivateKeyPem() []byte {
 		Bytes: x509.MarshalPKCS1PrivateKey(s.privateKey),
 	})
 	return privateKeyPem
+}
+
+func (s *ServerTLSService) GetCredentialConfig() (credentials.TransportCredentials, error) {
+	tlsCert, err := tls.X509KeyPair(s.cert, s.GetPrivateKeyPem())
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{tlsCert},
+		ClientAuth:   tls.NoClientCert,
+	}
+	return credentials.NewTLS(tlsConfig), nil
 }

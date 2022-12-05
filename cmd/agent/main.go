@@ -68,7 +68,11 @@ func main() {
 		}
 		client = metricServerClient
 	case "grpc":
-		conn, err2 := grpc.Dial(cfg.Address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		dialOption := grpc.WithTransportCredentials(insecure.NewCredentials())
+		if cfg.CryptoKey != "" {
+			dialOption = grpc.WithTransportCredentials(tlsService.GetGRPCTLSCredentials())
+		}
+		conn, err2 := grpc.Dial(cfg.Address, dialOption)
 		if err2 != nil {
 			log.Fatal(err2)
 		}
