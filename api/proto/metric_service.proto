@@ -1,0 +1,42 @@
+syntax = "proto3";
+package api;
+option go_package = "internal/api";
+
+service MetricService{
+  rpc GetMetricByID(MetricRequestByID) returns (Metric) {}
+  rpc GetAllMetrics(MetricRequestAll) returns (Metrics) {}
+  rpc SaveMetric(Metric) returns (MetricResponse){}
+  rpc SaveMetrics(Metrics) returns (MetricResponse) {}
+}
+
+enum MetricStatus {
+  accepted = 0;
+  rejected = 1;
+}
+
+enum MetricType {
+  delta = 0;
+  counter = 1;
+}
+
+message Metric {
+  string id=1;
+  MetricType mtype=2;
+  int64 delta=3;
+  float value=4;
+  string hash=5;
+}
+
+message Metrics {
+  repeated Metric metrics=1;
+}
+
+message MetricRequestByID {
+  string id = 1;
+}
+
+message MetricRequestAll {}
+
+message MetricResponse{
+  MetricStatus status = 1;
+}

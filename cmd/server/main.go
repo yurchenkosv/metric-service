@@ -18,16 +18,21 @@ import (
 	"github.com/yurchenkosv/metric-service/internal/service"
 	"github.com/yurchenkosv/metric-service/pkg/finalizer"
 
+	"github.com/yurchenkosv/metric-service/internal/api"
+	"github.com/yurchenkosv/metric-service/internal/handlers"
 	"github.com/yurchenkosv/metric-service/internal/routers"
+	"google.golang.org/grpc"
+	"net"
 )
 
 var (
-	cfg          = config.NewServerConfig()
-	repo         repository.Repository
-	buildVersion = "N/A"
-	buildDate    = "N/A"
-	buildCommit  = "N/A"
-	mainContext  = context.Background()
+	cfg               = config.NewServerConfig()
+	repo              repository.Repository
+	buildVersion      = "N/A"
+	buildDate         = "N/A"
+	buildCommit       = "N/A"
+	mainContext       = context.Background()
+	grpcServerOptions []grpc.ServerOption
 )
 
 func init() {
@@ -79,6 +84,7 @@ func main() {
 
 	router := routers.NewRouter(cfg, repo)
 	server := &http.Server{Addr: cfg.Address, Handler: router}
+
 	if cfg.CryptoKey != "" {
 		tlsService, err := service.NewServerTLSService(*cfg)
 		if err != nil {
@@ -92,6 +98,13 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		tlsConfig, err := tlsService.GetCredentialConfig()
+		if err != nil {
+			log.Fatal("cannot get credential config for grpc server ", err)
+		}
+
+		grpcServerOptions = append(grpcServerOptions, grpc.Creds(tlsConfig))
+
 		go func(server *http.Server) {
 			log.Warn(server.ListenAndServeTLS(cert, cfg.CryptoKey))
 		}(server)
@@ -100,6 +113,23 @@ func main() {
 			log.Warn(server.ListenAndServe())
 		}(server)
 	}
+
+	grpcMetricsHanlrer := handlers.NewGRPCMetricHandler(metricService)
+	grpcHealthCheckHandler := handlers.NewGRPCHealthCheckHandler(service.NewHealthCheckService(cfg, repo))
+	grpcServer := grpc.NewServer(grpcServerOptions...)
+	api.RegisterMetricServiceServer(grpcServer, grpcMetricsHanlrer)
+	api.RegisterHealthcheckServer(grpcServer, grpcHealthCheckHandler)
+	listener, err := net.Listen("tcp", cfg.GRPCAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func(listener net.Listener) {
+		err = grpcServer.Serve(listener)
+		if err != nil {
+			log.Error(err)
+		}
+	}(listener)
 
 	<-osSignal
 	log.Warn("shutting down server")
@@ -110,9 +140,9 @@ func main() {
 	if err != nil {
 		log.Error(err)
 	}
+	grpcServer.GracefulStop()
 	finalizer.Shutdown(func() {
 		sched.Stop()
 		metricService.Shutdown()
 	})
-
 }

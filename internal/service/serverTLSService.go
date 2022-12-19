@@ -12,9 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"crypto/tls"
 	log "github.com/sirupsen/logrus"
-
 	"github.com/yurchenkosv/metric-service/internal/config"
+	"google.golang.org/grpc/credentials"
 )
 
 type ServerTLSService struct {
@@ -53,15 +54,15 @@ func NewServerTLSService(serverConfig config.ServerConfig) (*ServerTLSService, e
 }
 
 func (s *ServerTLSService) CreatePemCertificateFromPrivateKey(dnsName ...string) ([]byte, error) {
-	maxSerialNum := big.NewInt(9999999)
-	rndNum, err := rand.Int(rand.Reader, maxSerialNum)
+	rnd, err := rand.Int(rand.Reader, big.NewInt(999999))
 	if err != nil {
-		log.Error("cannot create random serial ", err)
+		log.Error(err)
+		return nil, err
 	}
 	tml := x509.Certificate{
 		NotBefore:    time.Now(),
 		NotAfter:     time.Now().AddDate(5, 0, 0),
-		SerialNumber: rndNum,
+		SerialNumber: rnd,
 		Subject: pkix.Name{
 			CommonName:   dnsName[0],
 			Organization: []string{"TLS Ltd."},
@@ -97,4 +98,16 @@ func (s *ServerTLSService) GetPrivateKeyPem() []byte {
 		Bytes: x509.MarshalPKCS1PrivateKey(s.privateKey),
 	})
 	return privateKeyPem
+}
+
+func (s *ServerTLSService) GetCredentialConfig() (credentials.TransportCredentials, error) {
+	tlsCert, err := tls.X509KeyPair(s.cert, s.GetPrivateKeyPem())
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{tlsCert},
+		ClientAuth:   tls.NoClientCert,
+	}
+	return credentials.NewTLS(tlsConfig), nil
 }

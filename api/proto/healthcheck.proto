@@ -1,0 +1,19 @@
+syntax = "proto3";
+option go_package = "internal/api";
+package api;
+
+service Healthcheck {
+  rpc GetHealthStatus(Ping) returns (Pong) {}
+}
+
+enum HealthStatus {
+  healthy = 0;
+  error = 1;
+}
+
+message Ping {
+}
+
+message Pong{
+  HealthStatus status = 1;
+}
